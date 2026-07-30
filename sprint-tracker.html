@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0B0509">
+<title>Sprints</title>
+<style>
+  :root{
+    --ink:#0B0509; --panel:#170D14; --line:#2E1C26;
+    --mag:#C2185B; --rose:#F4A6B8; --gold:#F0C674;
+    --violet:#8B44B8; --teal:#4DD0B1; --cream:#F7EDE6; --mute:#A08C88;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{
+    background:var(--ink); color:var(--cream);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+    min-height:100vh; padding:20px 16px 50px; position:relative; overflow-x:hidden;
+  }
+  body::before{
+    content:''; position:fixed; inset:-30%; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(38% 28% at 22% 12%, rgba(194,24,91,.34), transparent 68%),
+      radial-gradient(34% 26% at 84% 34%, rgba(139,68,184,.28), transparent 70%),
+      radial-gradient(30% 24% at 50% 88%, rgba(240,198,116,.14), transparent 72%);
+    animation:drift 26s ease-in-out infinite alternate;
+  }
+  @keyframes drift{
+    0%{transform:translate(0,0) scale(1);}
+    50%{transform:translate(3%,-2%) scale(1.08);}
+    100%{transform:translate(-3%,2%) scale(1.03);}
+  }
+  .wrap{max-width:460px;margin:0 auto;position:relative;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  .serif{font-family:Georgia,'Times New Roman',serif;}
+
+  .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;}
+  .brand{
+    font-size:10px;letter-spacing:4px;text-transform:uppercase;font-weight:700;
+    background:linear-gradient(100deg,var(--rose),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .now{font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums;}
+
+  /* tabs */
+  .tabs{display:flex;gap:7px;margin-bottom:16px;}
+  .tabs button{
+    flex:1;padding:11px 4px;border-radius:11px;font-size:10.5px;font-weight:700;
+    letter-spacing:1.6px;text-transform:uppercase;
+    background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--mute);
+    transition:all .2s;
+  }
+  .tabs button.on{
+    background:linear-gradient(103deg,var(--mag),var(--violet));
+    border-color:transparent;color:#fff;
+    box-shadow:0 5px 18px -6px rgba(194,24,91,.9);
+  }
+  .view{display:none;} .view.on{display:block;animation:rise .3s ease;}
+  @keyframes rise{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:none;}}
+
+  /* hero with gradient piping */
+  .hero{
+    position:relative;border-radius:20px;padding:26px 20px;text-align:center;
+    margin-bottom:13px;background:linear-gradient(165deg,#1D0F17,#130A11);
+    overflow:hidden;
+  }
+  .hero::before{
+    content:'';position:absolute;inset:0;border-radius:20px;padding:1.5px;
+    background:linear-gradient(140deg,var(--mag),var(--rose) 45%,var(--gold));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;
+  }
+  .hero.active{
+    background:linear-gradient(165deg,#33122A,#1A0A14);
+    box-shadow:0 14px 44px -18px rgba(194,24,91,.95);
+  }
+  .hero.active::before{background:linear-gradient(140deg,var(--mag),var(--rose) 50%,var(--violet));}
+  .hero.rest{background:linear-gradient(165deg,#0F2620,#0A1714);}
+  .hero.rest::before{background:linear-gradient(140deg,var(--teal),#2E8B74 60%,var(--gold));}
+
+  .label{
+    font-size:10.5px;letter-spacing:3.5px;text-transform:uppercase;
+    font-weight:700;margin-bottom:11px;color:var(--rose);
+  }
+  .hero.rest .label{color:var(--teal);}
+  .blockname{font-size:33px;line-height:1.1;margin-bottom:13px;color:#fff;}
+  .count{
+    font-size:64px;line-height:1;font-weight:200;font-variant-numeric:tabular-nums;
+    letter-spacing:-1.5px;margin-bottom:7px;
+    background:linear-gradient(180deg,#fff,var(--rose) 55%,var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .hero.rest .count{background:linear-gradient(180deg,#fff,var(--teal) 60%,#2E8B74);
+    -webkit-background-clip:text;background-clip:text;color:transparent;}
+  .count.over{background:linear-gradient(180deg,#FFD9D4,#FF6B5E);
+    -webkit-background-clip:text;background-clip:text;color:transparent;}
+  .until{font-size:13px;color:var(--mute);}
+
+  /* buttons */
+  .ctrl{display:flex;gap:7px;margin-bottom:8px;}
+  .ctrl button{
+    flex:1;padding:14px 4px;border-radius:13px;font-size:11px;font-weight:700;
+    letter-spacing:1.3px;text-transform:uppercase;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);color:#DCC9C4;
+    transition:all .16s;
+  }
+  .ctrl button:active{transform:scale(.97);}
+  .ctrl button.go{
+    background:linear-gradient(103deg,var(--mag),#E0447A);
+    border-color:transparent;color:#fff;
+    box-shadow:0 7px 22px -8px rgba(194,24,91,1);
+  }
+  .ctrl button.wide{flex:2;}
+  .ctrl button:disabled{opacity:.28;box-shadow:none;}
+
+  /* progress */
+  #flower{
+    position:absolute;right:11px;bottom:9px;width:47px;height:59px;
+    pointer-events:none;opacity:.96;
+  }
+  #flower.bloom{animation:sway 5.5s ease-in-out infinite;transform-origin:60px 148px;}
+  @keyframes sway{0%,100%{transform:rotate(-2deg);}50%{transform:rotate(2deg);}}
+  .prog{margin:18px 0 4px;}
+  .prog .head{display:flex;justify-content:space-between;font-size:12px;color:var(--mute);margin-bottom:8px;}
+  .prog .head b{color:var(--cream);font-weight:700;font-variant-numeric:tabular-nums;}
+  .bar{height:10px;background:#231520;border-radius:99px;overflow:hidden;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.6);}
+  .bar div{
+    height:100%;border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1);
+    background:linear-gradient(90deg,var(--violet),var(--mag) 40%,var(--rose) 75%,var(--gold));
+    box-shadow:0 0 14px rgba(244,166,184,.55);
+  }
+  .finish{font-size:12.5px;color:var(--mute);margin-top:10px;text-align:center;}
+  .finish b{color:var(--gold);font-variant-numeric:tabular-nums;}
+
+  h2{
+    font-size:10.5px;letter-spacing:3.5px;text-transform:uppercase;font-weight:700;
+    margin:26px 0 9px;
+    background:linear-gradient(100deg,var(--rose),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+
+  /* rows, with colour piping on the left */
+  .row{
+    display:flex;align-items:center;gap:12px;padding:12px 12px 12px 15px;
+    border-radius:11px;margin-bottom:3px;position:relative;
+    background:rgba(255,255,255,.022);
+  }
+  .row::before{
+    content:'';position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:99px;
+    background:var(--line);
+  }
+  .row.work::before{background:linear-gradient(180deg,var(--rose),var(--mag));}
+  .row.cur{background:linear-gradient(100deg,rgba(194,24,91,.30),rgba(139,68,184,.14));}
+  .row.cur::before{background:linear-gradient(180deg,var(--gold),var(--rose));
+    box-shadow:0 0 10px rgba(244,166,184,.9);}
+  .row .t{width:72px;font-size:13px;color:var(--gold);font-variant-numeric:tabular-nums;font-weight:600;}
+  .row.work .t{color:var(--rose);}
+  .row .n{flex:1;font-size:15px;}
+  .row .n em{font-style:normal;display:block;font-size:11.5px;color:#8E7C78;margin-top:2px;}
+  .row .d{font-size:12px;color:#8E7C78;font-variant-numeric:tabular-nums;}
+  .row.done{opacity:.38;} .row.done .n{text-decoration:line-through;}
+
+  .adbtn{
+    width:100%;margin-top:14px;padding:13px;border-radius:12px;font-size:11px;
+    font-weight:700;letter-spacing:1.3px;text-transform:uppercase;
+    background:rgba(240,198,116,.07);border:1px solid rgba(240,198,116,.34);color:var(--gold);
+  }
+  .adbtn:active{transform:scale(.98);}
+  .hint{font-size:12px;line-height:1.6;color:#8E7C78;margin-top:18px;}
+
+  /* history */
+  .mnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .mnav button{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.05);
+    border:1px solid var(--line);font-size:20px;color:var(--gold);}
+  .mnav button:disabled{opacity:.22;}
+  .mtitle{font-size:20px;font-family:Georgia,serif;color:#fff;}
+
+  .stats{display:flex;gap:7px;margin-bottom:20px;}
+  .stat{
+    flex:1;border-radius:14px;padding:14px 8px;text-align:center;position:relative;
+    background:linear-gradient(165deg,#1D0F17,#130A11);border:1px solid var(--line);
+    overflow:hidden;
+  }
+  .stat::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--violet),var(--mag));}
+  .stat.hit::after{background:linear-gradient(90deg,var(--mag),var(--rose));}
+  .stat.streak::after{background:linear-gradient(90deg,var(--rose),var(--gold));}
+  .stat b{display:block;font-size:25px;font-weight:700;font-variant-numeric:tabular-nums;margin-bottom:3px;color:#fff;}
+  .stat.hit b{color:var(--rose);} .stat.streak b{color:var(--gold);}
+  .stat span{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:#8E7C78;}
+
+  .chart{
+    display:flex;align-items:flex-end;gap:2px;height:172px;padding:12px 9px 0;
+    background:linear-gradient(165deg,#170D14,#0E0710);
+    border:1px solid var(--line);border-radius:14px;
+  }
+  .col{flex:1;min-width:7px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+  .col .b{width:100%;border-radius:3px 3px 0 0;background:#2E1C26;min-height:2px;transition:height .4s;}
+  .col.hit .b{background:linear-gradient(180deg,var(--gold),var(--rose) 35%,var(--mag));
+    box-shadow:0 0 10px rgba(194,24,91,.7);}
+  .col.some .b{background:linear-gradient(180deg,var(--rose),#8E2A4C);}
+  .col.ads .b{background:linear-gradient(180deg,var(--gold),#8A6B2E);}
+  .col.today .b{outline:1.5px solid var(--gold);outline-offset:1px;}
+  .col .lab{font-size:8px;color:#6E5E5A;margin-top:5px;font-variant-numeric:tabular-nums;height:11px;}
+  .goalline{font-size:11px;color:#6E5E5A;margin-top:8px;text-align:right;}
+
+  .legend{display:flex;gap:13px;flex-wrap:wrap;margin-top:14px;font-size:11px;color:#8E7C78;}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle;}
+
+  /* backup */
+  .synclead{font-size:13px;line-height:1.6;color:var(--mute);margin-bottom:18px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;font-weight:700;}
+  .field label em{font-style:normal;color:#8E7C78;letter-spacing:.4px;text-transform:none;font-size:11px;margin-left:6px;font-weight:400;}
+  .field input{width:100%;padding:13px 14px;border-radius:12px;
+    background:rgba(255,255,255,.04);border:1px solid var(--line);
+    color:var(--cream);font-size:15px;font-family:inherit;}
+  .field input:focus{outline:none;border-color:var(--mag);box-shadow:0 0 0 3px rgba(194,24,91,.2);}
+  .field input::placeholder{color:#5E5450;}
+  .syncstat{font-size:12.5px;color:var(--mute);text-align:center;margin-top:12px;}
+  .syncstat.ok{color:var(--teal);} .syncstat.err{color:#FF6B5E;}
+  .steps{margin:0 0 18px 18px;}
+  .steps li{font-size:13.5px;line-height:1.6;color:#C4B2AC;margin-bottom:9px;}
+  .steps code{background:rgba(240,198,116,.12);padding:2px 6px;border-radius:5px;font-size:12px;color:var(--gold);}
+  .steps b{color:#fff;}
+  .empty{font-size:13px;color:#8E7C78;text-align:center;padding:28px 10px;line-height:1.6;}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <span class="brand">Sprints</span>
+    <span class="now" id="clock">&mdash;</span>
+  </div>
+
+  <div class="tabs">
+    <button id="tabToday" class="on">Today</button>
+    <button id="tabHist">History</button>
+  </div>
+
+  <div class="view on" id="viewToday">
+    <div class="hero" id="hero">
+      <div class="label" id="heroLabel">Not started</div>
+      <div class="blockname serif" id="heroName">Ready when you are</div>
+      <div class="count" id="count">5:00</div>
+      <div class="until" id="until">Five hours of writing, four sprints</div>
+      <svg id="flower" viewBox="0 0 120 150" aria-hidden="true">
+        <defs>
+          <radialGradient id="gBloom" cx="50%" cy="45%">
+            <stop offset="0%" stop-color="#FFE9A8"/>
+            <stop offset="45%" stop-color="#F4A6B8"/>
+            <stop offset="100%" stop-color="#C2185B"/>
+          </radialGradient>
+          <radialGradient id="gInner" cx="50%" cy="45%">
+            <stop offset="0%" stop-color="#FFF3D0"/>
+            <stop offset="100%" stop-color="#E0447A"/>
+          </radialGradient>
+          <linearGradient id="gStem" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#1F5E4A"/>
+            <stop offset="100%" stop-color="#4DD0B1"/>
+          </linearGradient>
+          <radialGradient id="gGlow" cx="50%" cy="50%">
+            <stop offset="0%" stop-color="#F4A6B8" stop-opacity=".55"/>
+            <stop offset="100%" stop-color="#C2185B" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+
+        <circle id="fGlow" cx="60" cy="52" r="46" fill="url(#gGlow)" opacity="0"/>
+
+        <g id="fStem">
+          <path d="M60 148 C58 120 62 96 60 72" stroke="url(#gStem)" stroke-width="4.5"
+                stroke-linecap="round" fill="none"/>
+        </g>
+
+        <g id="fLeafL" opacity="0">
+          <path d="M59 116 C42 114 32 104 30 94 C44 92 56 100 59 116 Z" fill="#2E8B74"/>
+        </g>
+        <g id="fLeafR" opacity="0">
+          <path d="M61 100 C78 98 88 88 90 78 C76 76 64 84 61 100 Z" fill="#39A085"/>
+        </g>
+
+        <g id="fOuter" opacity="0"></g>
+        <g id="fInner" opacity="0"></g>
+        <circle id="fCore" cx="60" cy="52" r="8" fill="#F0C674" opacity="0"/>
+      </svg>
+    </div>
+
+    <div class="ctrl">
+      <button class="go wide" id="mainBtn">Start now</button>
+      <button id="pauseBtn" disabled>Pause</button>
+    </div>
+    <div class="ctrl">
+      <button id="plusBtn" disabled>+15 min</button>
+      <button id="skipBtn" disabled>Skip ahead</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+
+    <div class="prog">
+      <div class="head"><span>Written today</span><span><b id="doneMin">0</b> / 300 min</span></div>
+      <div class="bar"><div id="barFill" style="width:0%"></div></div>
+      <div class="finish" id="finish"></div>
+    </div>
+
+    <h2>Today</h2>
+    <div id="list"></div>
+
+    <button class="adbtn" id="adBtn">Today is an ad day</button>
+
+    <p class="hint">Resets on its own each morning and files the day into History. If you fall into a scene and hours go by, the timer keeps counting and every minute counts. A long stretch swallows the sprints it already covered.</p>
+  </div>
+
+  <div class="view" id="viewHist">
+    <div class="mnav">
+      <button id="prevM">&lsaquo;</button>
+      <span class="mtitle" id="mTitle">&mdash;</span>
+      <button id="nextM">&rsaquo;</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b id="sHours">0</b><span>Hours</span></div>
+      <div class="stat hit"><b id="sHit">0</b><span>At goal</span></div>
+      <div class="stat streak"><b id="sStreak">0</b><span>Streak</span></div>
+    </div>
+
+    <div class="chart" id="chart"></div>
+    <div class="goalline">Full bar = 300 min</div>
+
+    <div class="legend">
+      <span><i style="background:linear-gradient(180deg,#F0C674,#C2185B)"></i>Goal met</span>
+      <span><i style="background:linear-gradient(180deg,#F4A6B8,#8E2A4C)"></i>Partial</span>
+      <span><i style="background:linear-gradient(180deg,#F0C674,#8A6B2E)"></i>Ad day</span>
+      <span><i style="background:#2E1C26"></i>Nothing</span>
+    </div>
+
+    <h2>Day by day</h2>
+    <div id="mList"></div>
+
+</div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var PLAN = [
+    {n:"Sprint 1", m:90, work:true},
+    {n:"Break",    m:15, note:"phone, socials"},
+    {n:"Sprint 2", m:90, work:true},
+    {n:"Lunch",    m:30, note:"news, phone, socials"},
+    {n:"Sprint 3", m:60, work:true},
+    {n:"Break",    m:15, note:"phone, socials"},
+    {n:"Sprint 4", m:60, work:true}
+  ];
+  var GOAL = 300;
+  var KEY = "sprints:v3";
+  var LIVE_CAP = 300;
+  var MON = ["January","February","March","April","May","June",
+             "July","August","September","October","November","December"];
+
+  var MEM = {};
+  function save(){
+    var str = JSON.stringify(S);
+    try { if (window.localStorage) { window.localStorage.setItem(KEY, str); return; } } catch(e){}
+    MEM[KEY] = str;
+  }
+  function load(){
+    var str = null;
+    try { if (window.localStorage) str = window.localStorage.getItem(KEY); } catch(e){}
+    if (str === null) str = MEM[KEY] || null;
+    if (!str) return null;
+    try { return JSON.parse(str); } catch(e){ return null; }
+  }
+
+  function dayKey(d){
+    d = d || new Date();
+    var m = d.getMonth() + 1, dd = d.getDate();
+    return d.getFullYear() + "-" + (m < 10 ? "0" : "") + m + "-" + (dd < 10 ? "0" : "") + dd;
+  }
+  function freshSession(){
+    return { i:0, blockStart:null, extra:{}, actual:{}, absorbed:[], paused:null, pausedMs:0, adDay:false };
+  }
+
+  var S = load();
+  if (!S || !S.history) S = { day: dayKey(), session: freshSession(), history: {} };
+  if (!S.session) S.session = freshSession();
+  if (!S.session.extra) S.session.extra = {};
+  if (!S.session.actual) S.session.actual = {};
+  if (!S.session.absorbed) S.session.absorbed = [];
+
+  var Q = S.session;
+  function $(id){ return document.getElementById(id); }
+  function mins(k){ return PLAN[k].m + (Q.extra[k] || 0); }
+
+  function rollDayIfNeeded(){
+    var today = dayKey();
+    if (S.day !== today){
+      S.day = today;
+      S.session = freshSession();
+      Q = S.session;
+      save();
+    }
+  }
+
+  function fmtClock(d){
+    var h = d.getHours(), m = d.getMinutes(), ap = h >= 12 ? "pm" : "am";
+    h = h % 12; if (h === 0) h = 12;
+    return h + ":" + (m < 10 ? "0" : "") + m + ap;
+  }
+  function fmtCount(ms){
+    var neg = ms < 0; ms = Math.abs(ms);
+    var t = Math.floor(ms/1000), h = Math.floor(t/3600), m = Math.floor(t/60) % 60, sec = t % 60;
+    return (neg ? "+" : "") + (h > 0
+      ? h + ":" + (m < 10 ? "0" : "") + m + ":" + (sec < 10 ? "0" : "") + sec
+      : Math.floor(t/60) + ":" + (sec < 10 ? "0" : "") + sec);
+  }
+  function elapsedMs(){
+    if (Q.blockStart === null) return 0;
+    var end = Q.paused !== null ? Q.paused : Date.now();
+    return end - Q.blockStart - Q.pausedMs;
+  }
+  function elapsedMin(){ return Math.min(LIVE_CAP, Math.floor(elapsedMs()/60000)); }
+
+  function doneMinutes(){
+    var d = 0, k;
+    for (k = 0; k < Q.i; k++){
+      if (!PLAN[k].work) continue;
+      if (Q.absorbed.indexOf(k) > -1) continue;
+      d += (Q.actual[k] != null) ? Q.actual[k] : mins(k);
+    }
+    if (Q.i < PLAN.length && PLAN[Q.i].work && Q.blockStart !== null) d += elapsedMin();
+    return Math.max(0, d);
+  }
+
+  function projected(){
+    var t = (Q.blockStart === null) ? Date.now() : (Q.blockStart + Q.pausedMs);
+    var times = [], k;
+    for (k = 0; k < PLAN.length; k++){
+      if (k < Q.i){ times.push(null); continue; }
+      times.push(new Date(t));
+      t += mins(k) * 60000;
+    }
+    return { times: times, end: new Date(t) };
+  }
+
+  function advance(){
+    if (Q.blockStart === null){ Q.blockStart = Date.now(); Q.pausedMs = 0; Q.paused = null; render(); return; }
+    if (Q.i >= PLAN.length){
+      S.session = freshSession(); Q = S.session; Q.blockStart = Date.now(); render(); return;
+    }
+    var act = elapsedMin(), over = 0;
+    if (PLAN[Q.i].work){ Q.actual[Q.i] = act; over = act - mins(Q.i); }
+
+    var j = Q.i + 1;
+    while (over > 0){
+      var k = j;
+      while (k < PLAN.length && !PLAN[k].work) k++;
+      if (k >= PLAN.length) break;
+      var d = mins(k);
+      if (over >= d){ over -= d; Q.absorbed.push(k); j = k + 1; } else break;
+    }
+    Q.i = j; Q.blockStart = Date.now(); Q.pausedMs = 0; Q.paused = null;
+    render();
+  }
+
+  function record(){
+    if (Q.adDay){ S.history[S.day] = { min:0, type:"ads" }; return; }
+    var dm = doneMinutes();
+    if (dm > 0) S.history[S.day] = { min:dm, type:"write" };
+    else delete S.history[S.day];
+  }
+
+  function streak(){
+    var n = 0, d = new Date(), first = true;
+    for (var g = 0; g < 400; g++){
+      var h = S.history[dayKey(d)];
+      var ok = h && (h.type === "ads" || h.min >= GOAL);
+      if (ok) n++;
+      else if (!first) break;
+      first = false;
+      d.setDate(d.getDate() - 1);
+    }
+    return n;
+  }
+
+  var viewMonth = new Date();
+  function renderHistory(){
+    var y = viewMonth.getFullYear(), m = viewMonth.getMonth();
+    var nd = new Date(y, m + 1, 0).getDate();
+    $("mTitle").textContent = MON[m] + " " + y;
+
+    var i, tot = 0, hit = 0, html = "", listHtml = "", todayK = dayKey();
+    for (i = 1; i <= nd; i++){
+      var k = y + "-" + (m + 1 < 10 ? "0" : "") + (m + 1) + "-" + (i < 10 ? "0" : "") + i;
+      var h = S.history[k], mn = h ? h.min : 0, cls = "col";
+      if (h && h.type === "ads") cls += " ads";
+      else if (mn >= GOAL){ cls += " hit"; hit++; }
+      else if (mn > 0) cls += " some";
+      if (k === todayK) cls += " today";
+      tot += mn;
+      var ht = (h && h.type === "ads") ? 18 : Math.max(2, Math.min(100, (mn / GOAL) * 100));
+      html += '<div class="' + cls + '"><div class="b" style="height:' + ht + '%"></div>' +
+              '<div class="lab">' + ((i % 5 === 0 || i === 1) ? i : "") + '</div></div>';
+      if (h){
+        var lbl = h.type === "ads" ? "Ad day" : (mn >= GOAL ? "Goal met" : "Partial");
+        listHtml += '<div class="row"><span class="t">' + MON[m].slice(0,3) + ' ' + i + '</span>' +
+                    '<span class="n">' + lbl + '</span>' +
+                    '<span class="d">' + (h.type === "ads" ? "\u2014" : mn + "m") + '</span></div>';
+      }
+    }
+    $("chart").innerHTML = html;
+    $("sHours").textContent = (tot / 60).toFixed(1);
+    $("sHit").textContent = hit;
+    $("sStreak").textContent = streak();
+    $("mList").innerHTML = listHtml ||
+      '<p class="empty">Nothing logged this month yet.<br>It fills in as you go.</p>';
+    var now = new Date();
+    $("nextM").disabled = (y === now.getFullYear() && m >= now.getMonth());
+  }
+
+  function render(){
+    rollDayIfNeeded();
+    $("clock").textContent = fmtClock(new Date());
+
+    var dm = doneMinutes(), goalHit = dm >= GOAL;
+    var started = Q.blockStart !== null, past = Q.i >= PLAN.length;
+    var hero = $("hero");
+
+    if (Q.adDay){
+      hero.className = "hero rest";
+      $("heroLabel").textContent = "Ad day";
+      $("heroName").textContent = "No sprints today";
+      $("count").textContent = "\u2014"; $("count").className = "count";
+      $("until").textContent = "Six hours on ads. Back to sprints tomorrow.";
+      $("mainBtn").textContent = "Make it a writing day";
+      $("pauseBtn").disabled = true; $("plusBtn").disabled = true; $("skipBtn").disabled = true;
+      $("adBtn").textContent = "Not an ad day after all";
+    } else if (!started && Q.i === 0){
+      hero.className = "hero";
+      $("heroLabel").textContent = "Not started";
+      $("heroName").textContent = "Ready when you are";
+      $("count").textContent = "5:00"; $("count").className = "count";
+      $("until").textContent = "Five hours of writing, four sprints";
+      $("mainBtn").textContent = "Start now";
+      $("pauseBtn").disabled = true; $("plusBtn").disabled = true; $("skipBtn").disabled = true;
+      $("adBtn").textContent = "Today is an ad day";
+    } else if (past || (goalHit && !PLAN[Q.i].work)){
+      hero.className = "hero rest";
+      $("heroLabel").textContent = "Finished";
+      $("heroName").textContent = dm + " minutes written";
+      $("count").textContent = "\u2713"; $("count").className = "count";
+      $("until").textContent = "Go home. The rest of the day is yours.";
+      $("mainBtn").textContent = "Start another block";
+      $("pauseBtn").disabled = true; $("plusBtn").disabled = true; $("skipBtn").disabled = true;
+      $("adBtn").textContent = "Today is an ad day";
+    } else {
+      var b = PLAN[Q.i], total = mins(Q.i) * 60000, left = total - elapsedMs();
+      hero.className = "hero " + (b.work ? "active" : "rest");
+      $("heroLabel").textContent = b.work ? "Writing" : "Break";
+      $("heroName").textContent = b.n;
+      $("count").textContent = fmtCount(left);
+      $("count").className = "count" + (left < 0 ? " over" : "");
+      $("until").textContent = Q.paused !== null ? "Paused"
+        : (left < 0 ? "Over by " + Math.floor(-left / 60000) + " min. Still counting."
+                    : "Until " + fmtClock(new Date(Date.now() + left)));
+      $("mainBtn").textContent = (Q.i === PLAN.length - 1) ? "Finish" : "Next: " + PLAN[Q.i + 1].n;
+      $("pauseBtn").disabled = false; $("plusBtn").disabled = false; $("skipBtn").disabled = false;
+      $("pauseBtn").textContent = Q.paused !== null ? "Resume" : "Pause";
+      $("adBtn").textContent = "Today is an ad day";
+    }
+
+    $("doneMin").textContent = dm;
+    $("barFill").style.width = Math.min(100, (dm / GOAL) * 100) + "%";
+    renderFlower(dm / GOAL);
+
+    var togo = Math.max(0, GOAL - dm), pj = projected();
+    $("finish").innerHTML = Q.adDay ? ""
+      : !started ? ""
+      : togo === 0 ? "Five hours done. <b>Anything more is a bonus.</b>"
+      : "<b>" + togo + " min</b> to go, finishing around <b>" + fmtClock(pj.end) + "</b>";
+
+    var html = "", k;
+    for (k = 0; k < PLAN.length; k++){
+      var bb = PLAN[k], ab = Q.absorbed.indexOf(k) > -1;
+      var cls = (ab || k < Q.i) ? "done" : ((k === Q.i && started && !Q.adDay) ? "cur" : "");
+      if (bb.work) cls += " work";
+      var tm = pj.times[k] ? fmtClock(pj.times[k]) : "\u2014";
+      var sub = ab ? "covered by a long stretch"
+              : (Q.actual[k] != null && Q.actual[k] !== bb.m) ? (Q.actual[k] + " min actual")
+              : (bb.note || "");
+      html += '<div class="row ' + cls + '"><span class="t">' + tm + '</span>' +
+              '<span class="n">' + bb.n + (sub ? '<em>' + sub + '</em>' : '') + '</span>' +
+              '<span class="d">' + mins(k) + 'm</span></div>';
+    }
+    $("list").innerHTML = html;
+
+    record();
+    save();
+    if ($("viewHist").className.indexOf("on") > -1) renderHistory();
+  }
+
+  $("mainBtn").addEventListener("click", function(){
+    if (Q.adDay){ Q.adDay = false; render(); return; }
+    advance();
+  });
+  $("skipBtn").addEventListener("click", advance);
+  $("pauseBtn").addEventListener("click", function(){
+    if (Q.paused === null) Q.paused = Date.now();
+    else { Q.pausedMs += Date.now() - Q.paused; Q.paused = null; }
+    render();
+  });
+  $("plusBtn").addEventListener("click", function(){
+    Q.extra[Q.i] = (Q.extra[Q.i] || 0) + 15; render();
+  });
+  $("resetBtn").addEventListener("click", function(){
+    if (!window.confirm("Reset today?")) return;
+    S.session = freshSession(); Q = S.session; render();
+  });
+  $("adBtn").addEventListener("click", function(){
+    Q.adDay = !Q.adDay;
+    if (Q.adDay){ Q.blockStart = null; Q.i = 0; }
+    render();
+  });
+
+  $("tabToday").addEventListener("click", function(){
+    $("tabToday").className = "on"; $("tabHist").className = "";
+    $("viewToday").className = "view on"; $("viewHist").className = "view";
+  });
+  $("tabHist").addEventListener("click", function(){
+    $("tabHist").className = "on"; $("tabToday").className = "";
+    $("viewHist").className = "view on"; $("viewToday").className = "view";
+    renderHistory();
+  });
+  $("prevM").addEventListener("click", function(){
+    viewMonth.setMonth(viewMonth.getMonth() - 1); renderHistory();
+  });
+  $("nextM").addEventListener("click", function(){
+    viewMonth.setMonth(viewMonth.getMonth() + 1); renderHistory();
+  });
+
+  /* ---------------- growing rose ---------------- */
+  var PETALS_OUT = 6, PETALS_IN = 5, FCX = 60, FCY = 52;
+
+  (function buildPetals(){
+    var out = "", i, a;
+    for (i = 0; i < PETALS_OUT; i++){
+      a = (360 / PETALS_OUT) * i;
+      out += '<ellipse cx="' + FCX + '" cy="' + (FCY - 19) + '" rx="12.5" ry="19" fill="url(#gBloom)" ' +
+             'transform="rotate(' + a + ' ' + FCX + ' ' + FCY + ')"/>';
+    }
+    document.getElementById("fOuter").innerHTML = out;
+
+    var inn = "";
+    for (i = 0; i < PETALS_IN; i++){
+      a = (360 / PETALS_IN) * i + 36;
+      inn += '<ellipse cx="' + FCX + '" cy="' + (FCY - 11) + '" rx="8" ry="12" fill="url(#gInner)" ' +
+             'transform="rotate(' + a + ' ' + FCX + ' ' + FCY + ')"/>';
+    }
+    document.getElementById("fInner").innerHTML = inn;
+  })();
+
+  function seg(p, a, b){ return Math.max(0, Math.min(1, (p - a) / (b - a))); }
+  function scaleAt(cx, cy, s){
+    return "translate(" + cx + "," + cy + ") scale(" + s.toFixed(3) + ") translate(" + (-cx) + "," + (-cy) + ")";
+  }
+
+  var CAPS = [
+    [0.00, "Not planted yet"],
+    [0.01, "Planted"],
+    [0.20, "Sprouting"],
+    [0.42, "Growing"],
+    [0.55, "Budding"],
+    [0.75, "Opening"],
+    [1.00, "In full bloom"]
+  ];
+
+  function renderFlower(pct){
+    pct = Math.max(0, Math.min(1, pct));
+
+    var stemS = 0.10 + 0.90 * seg(pct, 0.00, 0.45);
+    document.getElementById("fStem").setAttribute("transform",
+      "translate(60,148) scale(1," + stemS.toFixed(3) + ") translate(-60,-148)");
+
+    var lL = seg(pct, 0.10, 0.30);
+    var eL = document.getElementById("fLeafL");
+    eL.setAttribute("opacity", lL.toFixed(3));
+    eL.setAttribute("transform", scaleAt(59, 112, 0.3 + 0.7 * lL));
+
+    var lR = seg(pct, 0.26, 0.46);
+    var eR = document.getElementById("fLeafR");
+    eR.setAttribute("opacity", lR.toFixed(3));
+    eR.setAttribute("transform", scaleAt(61, 96, 0.3 + 0.7 * lR));
+
+    var c = seg(pct, 0.40, 0.55);
+    var eC = document.getElementById("fCore");
+    eC.setAttribute("opacity", c.toFixed(3));
+    eC.setAttribute("transform", scaleAt(FCX, FCY, 0.35 + 0.65 * c));
+
+    var o = seg(pct, 0.48, 0.82);
+    var eO = document.getElementById("fOuter");
+    eO.setAttribute("opacity", o.toFixed(3));
+    eO.setAttribute("transform", scaleAt(FCX, FCY, 0.18 + 0.82 * o));
+
+    var n = seg(pct, 0.70, 1.00);
+    var eI = document.getElementById("fInner");
+    eI.setAttribute("opacity", n.toFixed(3));
+    eI.setAttribute("transform", scaleAt(FCX, FCY, 0.18 + 0.82 * n));
+
+    document.getElementById("fGlow").setAttribute("opacity", seg(pct, 0.88, 1.00).toFixed(3));
+
+    var svg = document.getElementById("flower");
+    if (pct >= 1) svg.className.baseVal = "bloom";
+    else svg.className.baseVal = "";
+
+    var cap = CAPS[0][1], k;
+    for (k = 0; k < CAPS.length; k++) if (pct >= CAPS[k][0]) cap = CAPS[k][1];
+    var capEl = document.getElementById("gCap");
+    if (capEl) capEl.textContent = cap;
+  }
+
+  /* ---------------- GitHub sync ---------------- */
+  var CFG_KEY = "sprints:gh";
+  var cfg = { repo:"", path:"sprints.json", tok:"" };
+  try {
+    if (window.localStorage){
+      var raw = window.localStorage.getItem(CFG_KEY);
+      if (raw) cfg = JSON.parse(raw);
+    }
+  } catch(e){}
+
+  function saveCfg(){
+    try { if (window.localStorage) window.localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); } catch(e){}
+  }
+  function stat(msg){
+    if (window.console && console.log) console.log("[sprints] " + msg);
+  }
+  function b64encode(str){
+    return btoa(unescape(encodeURIComponent(str)));
+  }
+  function b64decode(str){
+    return decodeURIComponent(escape(atob(str.replace(/\s/g, ""))));
+  }
+  function ghUrl(){
+    return "https://api.github.com/repos/" + cfg.repo + "/contents/" + cfg.path;
+  }
+  function ghHeaders(){
+    return {
+      "Authorization": "Bearer " + cfg.tok,
+      "Accept": "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28"
+    };
+  }
+  function configured(){ return cfg.repo && cfg.path && cfg.tok; }
+
+  /* merge two history maps: keep the larger minute count per day, ads wins over empty */
+  function mergeHistory(a, b){
+    var out = {}, k;
+    for (k in a) if (a.hasOwnProperty(k)) out[k] = a[k];
+    for (k in b){
+      if (!b.hasOwnProperty(k)) continue;
+      if (!out[k]) { out[k] = b[k]; continue; }
+      var mine = out[k], theirs = b[k];
+      if (theirs.type === "ads" && mine.type !== "ads") out[k] = theirs;
+      else if (mine.type === "ads") { /* keep mine */ }
+      else if ((theirs.min || 0) > (mine.min || 0)) out[k] = theirs;
+    }
+    return out;
+  }
+
+  function ghGet(cb){
+    fetch(ghUrl() + "?t=" + Date.now(), { headers: ghHeaders(), cache: "no-store" })
+      .then(function(r){
+        if (r.status === 404) { cb(null, null); return null; }
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function(j){
+        if (!j) return;
+        var data = null;
+        try { data = JSON.parse(b64decode(j.content)); } catch(e){ data = null; }
+        cb(data, j.sha);
+      })
+      .catch(function(e){ stat("Could not read: " + e.message, "err"); });
+  }
+
+  function ghPut(payload, sha, done){
+    var body = {
+      message: "sprints " + dayKey(),
+      content: b64encode(JSON.stringify(payload, null, 2))
+    };
+    if (sha) body.sha = sha;
+    fetch(ghUrl(), {
+      method: "PUT",
+      headers: ghHeaders(),
+      body: JSON.stringify(body)
+    })
+    .then(function(r){
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(function(){ if (done) done(); })
+    .catch(function(e){ stat("Could not save: " + e.message, "err"); });
+  }
+
+  function syncNow(silent){
+    if (!configured()){ if (!silent) stat("Fill in all three fields first", "err"); return; }
+    if (!silent) stat("Syncing\u2026");
+    ghGet(function(remote, sha){
+      var merged = remote && remote.history ? mergeHistory(S.history, remote.history) : S.history;
+      S.history = merged;
+      save();
+      ghPut({ history: merged, updated: new Date().toISOString() }, sha, function(){
+        stat("Synced " + fmtClock(new Date()), "ok");
+        if ($("viewHist").className.indexOf("on") > -1) renderHistory();
+      });
+    });
+  }
+
+  function restore(){
+    if (!configured()){ stat("Fill in all three fields first", "err"); return; }
+    stat("Restoring\u2026");
+    ghGet(function(remote){
+      if (!remote || !remote.history){ stat("Nothing found in that repo", "err"); return; }
+      S.history = mergeHistory(S.history, remote.history);
+      save();
+      stat("Restored " + Object.keys(S.history).length + " days", "ok");
+      renderHistory();
+    });
+  }
+
+  /* No Backup tab in the UI. To switch cloud backup on later, open the
+     console on this page and run, once:
+       sprintsBackup("owner/repo", "github_pat_xxx")
+     After that it syncs on open and at each day rollover, by itself. */
+  window.sprintsBackup = function(repo, token, path){
+    cfg.repo = (repo || "").replace(/^https?:\/\/github\.com\//, "");
+    cfg.tok  = token || "";
+    cfg.path = path || "sprints.json";
+    saveCfg();
+    syncNow(false);
+    return "Backup on for " + cfg.repo;
+  };
+  window.sprintsRestore = function(){ restore(); return "Restoring\u2026"; };
+
+  /* auto sync on open, and again when a new day rolls over */
+  if (configured()) setTimeout(function(){ syncNow(true); }, 1200);
+  var lastSyncDay = S.day;
+  setInterval(function(){
+    if (configured() && S.day !== lastSyncDay){ lastSyncDay = S.day; syncNow(true); }
+  }, 60000);
+
+  render();
+  setInterval(render, 1000);
+})();
+</script>
+</body>
+</html>
