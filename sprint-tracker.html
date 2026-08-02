@@ -17,7 +17,8 @@
   body{
     background:var(--ink); color:var(--cream);
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
-    min-height:100vh; padding:20px 16px 50px; position:relative; overflow-x:hidden;
+    min-height:100vh; position:relative; overflow-x:hidden;
+    padding:calc(14px + env(safe-area-inset-top,0px)) 16px calc(28px + env(safe-area-inset-bottom,0px));
   }
   body::before{
     content:''; position:fixed; inset:-30%; z-index:-1; pointer-events:none;
@@ -36,7 +37,7 @@
   button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
   .serif{font-family:Georgia,'Times New Roman',serif;}
 
-  .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;}
+  .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
   .brand{
     font-size:10px;letter-spacing:4px;text-transform:uppercase;font-weight:700;
     background:linear-gradient(100deg,var(--rose),var(--gold));
@@ -53,9 +54,9 @@
   .bell:active{transform:scale(.92);}
 
   /* tabs */
-  .tabs{display:flex;gap:7px;margin-bottom:16px;}
+  .tabs{display:flex;gap:7px;margin-bottom:11px;}
   .tabs button{
-    flex:1;padding:11px 4px;border-radius:11px;font-size:10.5px;font-weight:700;
+    flex:1;padding:9px 4px;border-radius:11px;font-size:10.5px;font-weight:700;
     letter-spacing:1.6px;text-transform:uppercase;
     background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--mute);
     transition:all .2s;
@@ -70,8 +71,8 @@
 
   /* hero with gradient piping */
   .hero{
-    position:relative;border-radius:20px;padding:26px 20px;text-align:center;
-    margin-bottom:13px;background:linear-gradient(165deg,#1D0F17,#130A11);
+    position:relative;border-radius:20px;padding:16px 18px 14px;text-align:center;
+    margin-bottom:10px;background:linear-gradient(165deg,#1D0F17,#130A11);
     overflow:hidden;
   }
   .hero::before{
@@ -89,14 +90,14 @@
   .hero.rest::before{background:linear-gradient(140deg,var(--teal),#2E8B74 60%,var(--gold));}
 
   .label{
-    font-size:10.5px;letter-spacing:3.5px;text-transform:uppercase;
-    font-weight:700;margin-bottom:11px;color:var(--rose);
+    font-size:10px;letter-spacing:3.2px;text-transform:uppercase;
+    font-weight:700;margin-bottom:7px;color:var(--rose);
   }
   .hero.rest .label{color:var(--teal);}
-  .blockname{font-size:33px;line-height:1.1;margin-bottom:13px;color:#fff;}
+  .blockname{font-size:26px;line-height:1.1;margin-bottom:8px;color:#fff;}
   .count{
-    font-size:64px;line-height:1;font-weight:200;font-variant-numeric:tabular-nums;
-    letter-spacing:-1.5px;margin-bottom:7px;
+    font-size:50px;line-height:1;font-weight:200;font-variant-numeric:tabular-nums;
+    letter-spacing:-1.5px;margin-bottom:5px;
     background:linear-gradient(180deg,#fff,var(--rose) 55%,var(--gold));
     -webkit-background-clip:text;background-clip:text;color:transparent;
   }
@@ -104,13 +105,13 @@
     -webkit-background-clip:text;background-clip:text;color:transparent;}
   .count.over{background:linear-gradient(180deg,#FFD9D4,#FF6B5E);
     -webkit-background-clip:text;background-clip:text;color:transparent;}
-  .count.long{font-size:46px;letter-spacing:-1px;}
-  .until{font-size:13px;color:var(--mute);}
+  .count.long{font-size:38px;letter-spacing:-1px;}
+  .until{font-size:12px;color:var(--mute);}
 
   /* buttons */
-  .ctrl{display:flex;gap:7px;margin-bottom:8px;}
+  .ctrl{display:flex;gap:7px;margin-bottom:7px;}
   .ctrl button{
-    flex:1;padding:14px 4px;border-radius:13px;font-size:11px;font-weight:700;
+    flex:1;padding:11px 4px;border-radius:12px;font-size:10.5px;font-weight:700;
     letter-spacing:1.3px;text-transform:uppercase;
     background:rgba(255,255,255,.05);border:1px solid var(--line);color:#DCC9C4;
     transition:all .16s;
@@ -126,13 +127,13 @@
 
   /* progress */
   #flower{
-    position:absolute;right:12px;bottom:8px;width:74px;height:93px;
+    position:absolute;right:10px;bottom:6px;width:64px;height:80px;
     pointer-events:none;opacity:1;
   }
   #flower.bloom{animation:sway 5.5s ease-in-out infinite;transform-origin:60px 148px;}
   @keyframes sway{0%,100%{transform:rotate(-2deg);}50%{transform:rotate(2deg);}}
-  .prog{margin:18px 0 4px;}
-  .prog .head{display:flex;justify-content:space-between;font-size:12px;color:var(--mute);margin-bottom:8px;}
+  .prog{margin:12px 0 2px;}
+  .prog .head{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mute);margin-bottom:6px;}
   .prog .head b{color:var(--cream);font-weight:700;font-variant-numeric:tabular-nums;}
   .bar{height:10px;background:#231520;border-radius:99px;overflow:hidden;
     box-shadow:inset 0 1px 3px rgba(0,0,0,.6);}
@@ -141,44 +142,43 @@
     background:linear-gradient(90deg,var(--violet),var(--mag) 40%,var(--rose) 75%,var(--gold));
     box-shadow:0 0 14px rgba(244,166,184,.55);
   }
-  .finish{font-size:12.5px;color:var(--mute);margin-top:10px;text-align:center;}
+  .finish{font-size:12px;color:var(--mute);margin-top:7px;text-align:center;}
   .finish b{color:var(--gold);font-variant-numeric:tabular-nums;}
 
   h2{
     font-size:10.5px;letter-spacing:3.5px;text-transform:uppercase;font-weight:700;
-    margin:26px 0 9px;
+    margin:10px 0 5px;
     background:linear-gradient(100deg,var(--rose),var(--gold));
     -webkit-background-clip:text;background-clip:text;color:transparent;
   }
 
   /* rows, with colour piping on the left */
   .row{
-    display:flex;align-items:center;gap:12px;padding:12px 12px 12px 15px;
-    border-radius:11px;margin-bottom:3px;position:relative;
+    display:flex;align-items:center;gap:11px;padding:6px 11px 6px 14px;
+    border-radius:10px;margin-bottom:2px;position:relative;
     background:rgba(255,255,255,.022);
   }
   .row::before{
-    content:'';position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:99px;
+    content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:99px;
     background:var(--line);
   }
   .row.work::before{background:linear-gradient(180deg,var(--rose),var(--mag));}
   .row.cur{background:linear-gradient(100deg,rgba(194,24,91,.30),rgba(139,68,184,.14));}
   .row.cur::before{background:linear-gradient(180deg,var(--gold),var(--rose));
     box-shadow:0 0 10px rgba(244,166,184,.9);}
-  .row .t{width:72px;font-size:13px;color:var(--gold);font-variant-numeric:tabular-nums;font-weight:600;}
+  .row .t{width:70px;font-size:12.5px;color:var(--gold);font-variant-numeric:tabular-nums;font-weight:600;}
   .row.work .t{color:var(--rose);}
-  .row .n{flex:1;font-size:15px;}
-  .row .n em{font-style:normal;display:block;font-size:11.5px;color:#8E7C78;margin-top:2px;}
+  .row .n{flex:1;font-size:14px;}
+  .row .n em{font-style:normal;display:block;font-size:11px;color:#8E7C78;margin-top:1px;}
   .row .d{font-size:12px;color:#8E7C78;font-variant-numeric:tabular-nums;}
   .row.done{opacity:.38;} .row.done .n{text-decoration:line-through;}
 
   .adbtn{
-    width:100%;margin-top:14px;padding:13px;border-radius:12px;font-size:11px;
+    width:100%;margin-top:10px;padding:10px;border-radius:12px;font-size:10.5px;
     font-weight:700;letter-spacing:1.3px;text-transform:uppercase;
     background:rgba(240,198,116,.07);border:1px solid rgba(240,198,116,.34);color:var(--gold);
   }
   .adbtn:active{transform:scale(.98);}
-  .hint{font-size:12px;line-height:1.6;color:#8E7C78;margin-top:18px;}
 
   /* history */
   .mnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
@@ -247,7 +247,8 @@
     62%{opacity:1;}   78%{opacity:0;}  100%{opacity:0;}
   }
   .alert{
-    position:fixed;left:12px;right:12px;top:12px;z-index:200;
+    position:fixed;left:12px;right:12px;z-index:200;
+    top:calc(12px + env(safe-area-inset-top,0px));
     display:flex;align-items:center;gap:10px;padding:14px 12px 14px 16px;
     border-radius:16px;
     background:linear-gradient(103deg,#3A1226,#22101C);
@@ -376,8 +377,6 @@
     <div id="list"></div>
 
     <button class="adbtn" id="adBtn">Today is an ad day</button>
-
-    <p class="hint">Resets on its own each morning and files the day into History. Write past a sprint and it rolls into the next one on its own, skipping the break, so the count stays right. Want a break instead? Tap Pause, then Resume.</p>
   </div>
 
   <div class="view" id="viewHist">
