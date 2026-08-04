@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0B0509">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
 <title>Sprints</title>
 <style>
   :root{
@@ -405,6 +407,8 @@
     <h2>Day by day</h2>
     <div id="mList"></div>
 
+    <button class="adbtn" id="editDayBtn">Add or edit a day</button>
+
 </div>
 
 </div>
@@ -459,6 +463,35 @@
   if (!S.session.actual) S.session.actual = {};
   if (!S.session.absorbed) S.session.absorbed = [];
   if (!S.session.alerted) S.session.alerted = [];
+
+
+  /* Earlier builds stored under sprints:v1 / v2. Salvage anything left there. */
+  function migrateOld(){
+    if (Object.keys(S.history).length) return;
+    var WORK = [0,2,4,6], keys = ["sprints:v2","sprints:v1"], f, raw, o, sess, mins, i, idx, v, when, dk;
+    for (f = 0; f < keys.length; f++){
+      raw = null;
+      try { if (window.localStorage) raw = window.localStorage.getItem(keys[f]); } catch(e){}
+      if (!raw) continue;
+      try { o = JSON.parse(raw); } catch(e){ continue; }
+      if (!o) continue;
+      sess = o.session || o;
+      if (!sess || !sess.actual) continue;
+      mins = 0;
+      for (i = 0; i < WORK.length; i++){
+        idx = WORK[i];
+        if (sess.absorbed && sess.absorbed.indexOf(idx) > -1) continue;
+        v = sess.actual[idx];
+        if (typeof v === "number") mins += v;
+      }
+      if (mins <= 0) continue;
+      when = sess.blockStart ? new Date(sess.blockStart) : new Date(Date.now() - 86400000);
+      dk = dayKey(when);
+      if (!S.history[dk]) S.history[dk] = { min: Math.min(DAY_CAP, mins), type: "write" };
+    }
+    save();
+  }
+  migrateOld();
 
   var Q = S.session;
   function $(id){ return document.getElementById(id); }
@@ -577,7 +610,7 @@
     if (Q.adDay){ S.history[S.day] = { min:0, type:"ads" }; return; }
     var dm = doneMinutes();
     if (dm > 0) S.history[S.day] = { min:dm, type:"write" };
-    else delete S.history[S.day];
+    else if (Q.blockStart !== null) delete S.history[S.day];
   }
 
   function streak(){
@@ -762,6 +795,29 @@
     $("viewHist").className = "view on"; $("viewToday").className = "view";
     renderHistory();
   });
+
+  $("editDayBtn").addEventListener("click", function(){
+    var d = window.prompt("Which day?  Format: YYYY-MM-DD", dayKey());
+    if (!d) return;
+    d = d.trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)){ window.alert("Use the format 2026-08-04"); return; }
+    var cur = S.history[d];
+    var def = cur ? (cur.type === "ads" ? "ads" : String(cur.min)) : "";
+    var m = window.prompt("Minutes written that day.\n\n0 clears it. Type  ads  for an ad day.", def);
+    if (m === null) return;
+    m = m.trim().toLowerCase();
+    if (m === "ads"){
+      S.history[d] = { min:0, type:"ads" };
+    } else {
+      var n = parseInt(m, 10);
+      if (isNaN(n) || n < 0){ window.alert("Enter a number of minutes."); return; }
+      if (n === 0) delete S.history[d];
+      else S.history[d] = { min: Math.min(DAY_CAP, n), type:"write" };
+    }
+    save();
+    renderHistory();
+  });
+
   $("prevM").addEventListener("click", function(){
     viewMonth.setMonth(viewMonth.getMonth() - 1); renderHistory();
   });
