@@ -39,21 +39,10 @@
   button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
   .serif{font-family:Georgia,'Times New Roman',serif;}
 
-  .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
-  .brand{
-    font-size:10px;letter-spacing:4px;text-transform:uppercase;font-weight:700;
-    background:linear-gradient(100deg,var(--rose),var(--gold));
-    -webkit-background-clip:text;background-clip:text;color:transparent;
+  .clocktag{
+    position:absolute;top:11px;right:14px;z-index:2;
+    font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums;
   }
-  .topright{display:flex;align-items:center;gap:9px;}
-  .now{font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums;}
-  .bell{
-    width:27px;height:27px;border-radius:50%;font-size:13px;line-height:1;
-    color:var(--gold);background:rgba(240,198,116,.10);
-    border:1px solid rgba(240,198,116,.34);
-  }
-  .bell.off{color:#6E5E5A;background:rgba(255,255,255,.04);border-color:var(--line);}
-  .bell:active{transform:scale(.92);}
 
   /* tabs */
   .tabs{display:flex;gap:7px;margin-bottom:11px;}
@@ -135,8 +124,11 @@
   #flower.bloom{animation:sway 5.5s ease-in-out infinite;transform-origin:60px 148px;}
   @keyframes sway{0%,100%{transform:rotate(-2deg);}50%{transform:rotate(2deg);}}
   .prog{margin:12px 0 2px;}
-  .prog .head{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mute);margin-bottom:6px;}
-  .prog .head b{color:var(--cream);font-weight:700;font-variant-numeric:tabular-nums;}
+  .prog .head{display:flex;justify-content:space-between;align-items:baseline;
+    font-size:14px;color:var(--mute);margin-bottom:7px;}
+  .prog .head b{color:var(--cream);font-weight:700;font-variant-numeric:tabular-nums;
+    font-size:26px;letter-spacing:-.5px;}
+  .prog .head .goal{font-size:14px;}
   .bar{height:10px;background:#231520;border-radius:99px;overflow:hidden;
     box-shadow:inset 0 1px 3px rgba(0,0,0,.6);}
   .bar div{
@@ -175,6 +167,11 @@
   .row .d{font-size:13px;color:#8E7C78;font-variant-numeric:tabular-nums;}
   .row.done{opacity:.38;} .row.done .n{text-decoration:line-through;}
 
+  .ctrl.small button{padding:8px 4px;font-size:9.5px;letter-spacing:1px;}
+  .adbtn-inline{
+    background:rgba(240,198,116,.07) !important;
+    border-color:rgba(240,198,116,.34) !important;color:var(--gold) !important;
+  }
   .adbtn{
     width:100%;margin-top:10px;padding:10px;border-radius:12px;font-size:10.5px;
     font-weight:700;letter-spacing:1.3px;text-transform:uppercase;
@@ -302,10 +299,6 @@
 
 <div class="wrap">
 
-  <div class="top">
-    <span class="brand">Sprints</span>
-    <span class="topright"><button class="bell" id="bellBtn" aria-label="Test sound">♪</button><span class="now" id="clock">&mdash;</span></span>
-  </div>
 
   <div class="tabs">
     <button id="tabToday" class="on">Today</button>
@@ -314,10 +307,11 @@
 
   <div class="view on" id="viewToday">
     <div class="hero" id="hero">
+      <div class="clocktag" id="clock">&mdash;</div>
       <div class="label" id="heroLabel">Not started</div>
       <div class="blockname serif" id="heroName">Ready when you are</div>
-      <div class="count" id="count">5:00</div>
-      <div class="until" id="until">Five hours of writing, four sprints</div>
+      <div class="count" id="count">&mdash;</div>
+      <div class="until" id="until">&mdash;</div>
       <svg id="flower" viewBox="0 0 120 150" aria-hidden="true">
         <defs>
           <radialGradient id="gBloom" cx="50%" cy="45%">
@@ -363,22 +357,21 @@
       <button class="go wide" id="mainBtn">Start now</button>
       <button id="pauseBtn" disabled>Pause</button>
     </div>
-    <div class="ctrl">
-      <button id="plusBtn" disabled>+15 min</button>
-      <button id="skipBtn" disabled>Skip ahead</button>
+    <div class="ctrl small">
+      <button id="backBtn" disabled>&larr; Back</button>
+      <button id="skipBtn" disabled>Skip &rarr;</button>
       <button id="resetBtn">Reset</button>
+      <button class="adbtn-inline" id="adBtn">Ad day</button>
     </div>
 
     <div class="prog">
-      <div class="head"><span>Written today</span><span><b id="doneMin">0</b> / 300 min</span></div>
+      <div class="head"><span>Written today</span><span class="goal"><b id="doneMin">0</b> / <span id="goalMin">280</span> min</span></div>
       <div class="bar"><div id="barFill" style="width:0%"></div></div>
       <div class="finish" id="finish"></div>
     </div>
 
     <h2>Today</h2>
     <div id="list"></div>
-
-    <button class="adbtn" id="adBtn">Today is an ad day</button>
   </div>
 
   <div class="view" id="viewHist">
@@ -395,7 +388,7 @@
     </div>
 
     <div class="chart" id="chart"></div>
-    <div class="goalline">Full bar = 300 min</div>
+    <div class="goalline">Full bar = <span id="goalMin2">280</span> min</div>
 
     <div class="legend">
       <span><i style="background:linear-gradient(180deg,#F0C674,#C2185B)"></i>Goal met</span>
@@ -424,9 +417,10 @@
     {n:"Lunch",    m:30, note:"news, phone, socials"},
     {n:"Sprint 3", m:60, work:true},
     {n:"Break",    m:15, note:"phone, socials"},
-    {n:"Sprint 4", m:60, work:true}
+    {n:"Sprint 4", m:40, work:true},
+    {n:"Engineering study", m:60, note:"optional \u00b7 at work", optional:true}
   ];
-  var GOAL = 300;
+  var GOAL = 280;
   var KEY = "sprints:v3";
   var LIVE_CAP = 300;
   var DAY_CAP = 480;
@@ -541,11 +535,12 @@
       if (elapsedMs() < total) return;
 
       var k = Q.i + 1;
-      while (k < PLAN.length && !PLAN[k].work){
+      while (k < PLAN.length && !PLAN[k].work && !PLAN[k].optional){
         if (Q.absorbed.indexOf(k) < 0) Q.absorbed.push(k);
         k++;
       }
-      if (k >= PLAN.length) return;   // last sprint just keeps counting up
+      // never auto-advance into an optional block, and never past the end
+      if (k >= PLAN.length || PLAN[k].optional) return;
 
       var finished = Q.i, brk = (k > finished + 1) ? finished + 1 : -1;
       Q.actual[finished] = mins(finished);
@@ -584,6 +579,27 @@
       t += mins(k) * 60000;
     }
     return { times: times, end: new Date(t) };
+  }
+
+
+  /* Undo for mis-taps. Snapshots the session before each manual advance, so
+     Back restores the exact prior state rather than trying to reverse the
+     roll-forward maths. Auto-rolls are not snapshotted - only your own taps. */
+  var undoStack = [];
+  function snapshot(){
+    try {
+      undoStack.push(JSON.stringify(Q));
+      if (undoStack.length > 12) undoStack.shift();
+    } catch(e){}
+  }
+  function undo(){
+    if (!undoStack.length) return;
+    try {
+      S.session = JSON.parse(undoStack.pop());
+      Q = S.session;
+      save();
+      render();
+    } catch(e){}
   }
 
   function advance(){
@@ -661,6 +677,32 @@
     $("nextM").disabled = (y === now.getFullYear() && m >= now.getMonth());
   }
 
+
+  /* Phrase the goal from GOAL itself, so changing sprint lengths updates
+     every label automatically instead of leaving stale copy behind. */
+
+  /* The idle countdown shows the day's total writing time, e.g. 4:40 */
+  function firstSprintClock(){
+    var h = Math.floor(GOAL / 60), m = GOAL % 60;
+    return h + ":" + (m < 10 ? "0" : "") + m;
+  }
+
+  function goalPhrase(){
+    var h = Math.floor(GOAL / 60), m = GOAL % 60;
+    if (m === 0) return h + (h === 1 ? " hour" : " hours");
+    return h + "h " + m + "m";
+  }
+  function sprintCount(){
+    var n = 0;
+    for (var i = 0; i < PLAN.length; i++) if (PLAN[i].work) n++;
+    return n;
+  }
+
+  var goalLabel = document.getElementById("goalMin");
+  if (goalLabel) goalLabel.textContent = GOAL;
+  var goalLabel2 = document.getElementById("goalMin2");
+  if (goalLabel2) goalLabel2.textContent = GOAL;
+
   function render(){
     rollDayIfNeeded();
     autoRoll();
@@ -675,27 +717,27 @@
       $("heroLabel").textContent = "Ad day";
       $("heroName").textContent = "No sprints today";
       $("count").textContent = "\u2014"; $("count").className = "count";
-      $("until").textContent = "Six hours on ads. Back to sprints tomorrow.";
+      $("until").textContent = "Ad day. Back to sprints tomorrow.";
       $("mainBtn").textContent = "Make it a writing day";
-      $("pauseBtn").disabled = true; $("plusBtn").disabled = true; $("skipBtn").disabled = true;
+      $("pauseBtn").disabled = true; $("skipBtn").disabled = true;
       $("adBtn").textContent = "Not an ad day after all";
     } else if (!started && Q.i === 0){
       hero.className = "hero";
       $("heroLabel").textContent = "Not started";
       $("heroName").textContent = "Ready when you are";
-      $("count").textContent = "5:00"; $("count").className = "count";
-      $("until").textContent = "Five hours of writing, four sprints";
+      $("count").textContent = firstSprintClock(); $("count").className = "count";
+      $("until").textContent = goalPhrase() + " of writing, " + sprintCount() + " sprints";
       $("mainBtn").textContent = "Start now";
-      $("pauseBtn").disabled = true; $("plusBtn").disabled = true; $("skipBtn").disabled = true;
+      $("pauseBtn").disabled = true; $("skipBtn").disabled = true;
       $("adBtn").textContent = "Today is an ad day";
-    } else if (past || (goalHit && !PLAN[Q.i].work)){
+    } else if (past || (goalHit && !PLAN[Q.i].work && !PLAN[Q.i].optional)){
       hero.className = "hero rest";
       $("heroLabel").textContent = "Finished";
       $("heroName").textContent = dm + " minutes written";
       $("count").textContent = "\u2713"; $("count").className = "count";
       $("until").textContent = "Go home. The rest of the day is yours.";
       $("mainBtn").textContent = "Start another block";
-      $("pauseBtn").disabled = true; $("plusBtn").disabled = true; $("skipBtn").disabled = true;
+      $("pauseBtn").disabled = true; $("skipBtn").disabled = true;
       $("adBtn").textContent = "Today is an ad day";
     } else {
       var b = PLAN[Q.i], total = mins(Q.i) * 60000, left = total - elapsedMs();
@@ -708,11 +750,15 @@
       $("until").textContent = Q.paused !== null ? "Paused"
         : (left < 0 ? "Over by " + Math.floor(-left / 60000) + " min. Still counting."
                     : "Until " + fmtClock(new Date(Date.now() + left)));
-      $("mainBtn").textContent = (Q.i === PLAN.length - 1) ? "Finish" : "Next: " + PLAN[Q.i + 1].n;
-      $("pauseBtn").disabled = false; $("plusBtn").disabled = false; $("skipBtn").disabled = false;
+      var nxt = PLAN[Q.i + 1];
+      $("mainBtn").textContent = (Q.i === PLAN.length - 1) ? "Finish"
+        : (nxt.optional ? "Start " + nxt.n : "Next: " + nxt.n);
+      $("pauseBtn").disabled = false; $("skipBtn").disabled = false;
       $("pauseBtn").textContent = Q.paused !== null ? "Resume" : "Pause";
       $("adBtn").textContent = "Today is an ad day";
     }
+
+    $("backBtn").disabled = (undoStack.length === 0);
 
     $("doneMin").textContent = dm;
     $("barFill").style.width = Math.min(100, (dm / GOAL) * 100) + "%";
@@ -721,7 +767,7 @@
     var togo = Math.max(0, GOAL - dm), pj = projected();
     $("finish").innerHTML = Q.adDay ? ""
       : !started ? ""
-      : togo === 0 ? "Five hours done. <b>Anything more is a bonus.</b>"
+      : togo === 0 ? goalPhrase() + " done. <b>Anything more is a bonus.</b>"
       : "<b>" + togo + " min</b> to go, finishing around <b>" + fmtClock(pj.end) + "</b>";
 
     var html = "", k;
@@ -743,7 +789,7 @@
       var cur = PLAN[Q.i], overBy = elapsedMs() - mins(Q.i) * 60000;
       if (overBy >= 0 && Q.alerted.indexOf(Q.i) < 0){
         Q.alerted.push(Q.i);
-        if (cur.work) pending = { title: "Five hours done", sub: "Anything past this is a bonus.", label: null, fn: null };
+        if (cur.work) pending = { title: goalPhrase() + " done", sub: "Anything past this is a bonus.", label: null, fn: null };
         else pending = { title: cur.n + " over", sub: "Ready when you are.", label: "Back to writing", fn: advance };
       }
     }
@@ -765,20 +811,20 @@
 
   $("mainBtn").addEventListener("click", function(){
     if (Q.adDay){ Q.adDay = false; render(); return; }
+    snapshot();
     advance();
   });
-  $("skipBtn").addEventListener("click", advance);
+  $("skipBtn").addEventListener("click", function(){ snapshot(); advance(); });
   $("pauseBtn").addEventListener("click", function(){
     if (Q.paused === null) Q.paused = Date.now();
     else { Q.pausedMs += Date.now() - Q.paused; Q.paused = null; }
     render();
   });
-  $("plusBtn").addEventListener("click", function(){
-    Q.extra[Q.i] = (Q.extra[Q.i] || 0) + 15; render();
-  });
+  $("backBtn").addEventListener("click", undo);
+
   $("resetBtn").addEventListener("click", function(){
     if (!window.confirm("Reset today?")) return;
-    S.session = freshSession(); Q = S.session; render();
+    S.session = freshSession(); Q = S.session; undoStack = []; render();
   });
   $("adBtn").addEventListener("click", function(){
     Q.adDay = !Q.adDay;
@@ -927,20 +973,6 @@
   }
 
 
-  function paintBell(){
-    $("bellBtn").className = "bell" + (soundOn ? "" : " off");
-  }
-  $("bellBtn").addEventListener("click", function(e){
-    e.stopPropagation();
-    unlockAudio();
-    soundOn = !soundOn;
-    try { if (window.localStorage) window.localStorage.setItem("sprints:sound", soundOn ? "1" : "0"); } catch(err){}
-    paintBell();
-    buzz();
-    flashScreen();
-    if (soundOn) setTimeout(chime, 60);
-  });
-  paintBell();
 
   /* keep the screen awake while a block is running, so the timer and the
      chime actually reach you instead of being suspended by the phone */
