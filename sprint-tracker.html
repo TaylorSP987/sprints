@@ -411,7 +411,7 @@
     </div>
 
     <div class="prog">
-      <div class="head"><span>Written today</span><span class="goal"><b id="doneMin">0</b> / <span id="goalMin">280</span> min</span></div>
+      <div class="head"><span>Written today</span><span class="goal"><b id="doneMin">0</b> / <span id="goalMin">&ndash;</span> min</span></div>
       <div class="bar"><div id="barFill" style="width:0%"></div></div>
       <div class="finish" id="finish"></div>
     </div>
@@ -447,7 +447,7 @@
     </div>
 
     <div class="chart" id="chart"></div>
-    <div class="goalline">Full bar = <span id="goalMin2">280</span> min</div>
+    <div class="goalline">Full bar = <span id="goalMin2">&ndash;</span> min</div>
 
     <div class="legend">
       <span><i style="background:linear-gradient(180deg,#F0C674,#C2185B)"></i>Goal met</span>
@@ -474,9 +474,9 @@
 
     <div class="field">
       <label for="logMins">Minutes written</label>
-      <input type="number" id="logMins" min="0" max="480" step="5" placeholder="280" inputmode="numeric">
+      <input type="number" id="logMins" min="0" max="480" step="5" placeholder="" inputmode="numeric">
       <div class="quick">
-        <button data-m="280">Full day</button>
+        <button data-m="full">Full day</button>
         <button data-m="180">180</button>
         <button data-m="90">90</button>
         <button data-m="ads">Ad day</button>
@@ -506,10 +506,10 @@
     {n:"Lunch",    m:30, note:"news, phone, socials"},
     {n:"Sprint 3", m:60, work:true},
     {n:"Break",    m:15, note:"phone, socials"},
-    {n:"Sprint 4", m:40, work:true},
-    {n:"Engineering study", m:60, note:"optional \u00b7 at work", optional:true}
+    {n:"Sprint 4", m:50, work:true},
+    {n:"Engineering study", m:40, note:"optional \u00b7 at work", optional:true}
   ];
-  var GOAL = 280;
+  var GOAL = 290;
   var KEY = "sprints:v3";
   var LIVE_CAP = 300;
   var DAY_CAP = 480;
@@ -857,6 +857,8 @@
   if (goalLabel) goalLabel.textContent = GOAL;
   var goalLabel2 = document.getElementById("goalMin2");
   if (goalLabel2) goalLabel2.textContent = GOAL;
+  var logPh = document.getElementById("logMins");
+  if (logPh) logPh.placeholder = GOAL;
 
   function render(){
     rollDayIfNeeded();
@@ -1038,7 +1040,7 @@
     b.addEventListener("click", function(){
       var v = b.getAttribute("data-m");
       if (v === "ads") saveLog("ads");
-      else { $("logMins").value = v; msgLog(""); }
+      else { $("logMins").value = (v === "full") ? GOAL : v; msgLog(""); }
     });
   });
 
