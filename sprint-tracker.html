@@ -315,6 +315,13 @@
     border-radius:10px;padding:10px 11px;margin:2px 0 10px;
   }
   .ghnote b{color:var(--gold);}
+  .adbtn.quiet{color:#8E7C78;letter-spacing:1.2px;}
+  .adbtn.due{
+    color:var(--gold);border-color:rgba(240,198,116,.45);background:rgba(240,198,116,.10);
+  }
+  .ctrl.small button.due{
+    color:var(--gold);border-color:rgba(240,198,116,.45);background:rgba(240,198,116,.10);
+  }
   .ghbtn{
     width:100%;margin-top:14px;padding:11px;border-radius:12px;font-size:10.5px;
     font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
@@ -527,13 +534,11 @@
     </div>
 
     <button class="adbtn" id="editDayBtn">Log a day I forgot to track</button>
-    <div class="ctrl small" style="margin-top:14px">
-      <button id="expBtn">Save a backup</button>
-      <button id="impBtn">Restore a backup</button>
-    </div>
+    <h2 style="margin-top:22px">Backup</h2>
+    <button class="adbtn" id="expBtn">Save a backup</button>
+    <button class="adbtn quiet" id="impBtn">Restore from a backup file</button>
     <input type="file" id="impFile" accept=".json,application/json" hidden>
     <div class="syncstat" id="bkStat"></div>
-    <button class="ghbtn" id="ghBtn">Advanced: auto-sync to GitHub</button>
 
 </div>
 
@@ -606,42 +611,6 @@
     </div>
     <div class="ctrl small">
       <button id="wsDelete" hidden>Delete this session</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal" id="ghModal" hidden>
-  <div class="sheet">
-    <div class="sheettitle">Backup &amp; sync</div>
-    <p class="sheetsub">
-      Keeps your history and word counts in a GitHub file, so they survive a lost
-      phone and appear on your other devices.
-    </p>
-
-    <div class="field">
-      <label for="ghRepo">Repository <em>owner/name</em></label>
-      <input type="text" id="ghRepo" placeholder="TaylorSP987/writing-data" autocapitalize="off" autocorrect="off" spellcheck="false">
-    </div>
-
-    <div class="field">
-      <label for="ghTok">Access token</label>
-      <input type="password" id="ghTok" placeholder="github_pat_..." autocapitalize="off" autocorrect="off" spellcheck="false">
-    </div>
-
-    <div class="ghnote">
-      Use a <b>private</b> repo, and a fine-grained token limited to it with
-      Contents set to Read and write. The token stays on this device only.
-    </div>
-
-    <div class="syncstat" id="ghStat"></div>
-
-    <div class="ctrl">
-      <button class="go wide" id="ghSave">Save &amp; sync</button>
-      <button id="ghClose">Close</button>
-    </div>
-    <div class="ctrl small">
-      <button id="ghPull">Restore from backup</button>
-      <button id="ghForget">Forget token</button>
     </div>
   </div>
 </div>
@@ -912,8 +881,8 @@
   function streak(){
     var n = 0, d = new Date(), first = true;
     for (var g = 0; g < 400; g++){
-      var h = S.history[dayKey(d)];
-      var ok = (effType(k) === "ads") || (effMins(k) >= GOAL);
+      var dk = dayKey(d);
+      var ok = (effType(dk) === "ads") || (effMins(dk) >= GOAL);
       if (ok) n++;
       else if (!first) break;
       first = false;
@@ -1006,6 +975,7 @@
   var viewMonth = new Date();
   function renderHistory(){
     renderWeek();
+    if (typeof paintBackupAge === "function") paintBackupAge();
     var y = viewMonth.getFullYear(), m = viewMonth.getMonth();
     var nd = new Date(y, m + 1, 0).getDate();
     $("mTitle").textContent = MON[m] + " " + y;
@@ -1904,6 +1874,37 @@
   /* ---- backup to a file: no account, no token, works offline ----
      Save writes a .json to your device. Restore reads one back and merges it
      in, so nothing you have logged since is lost. */
+
+  /* Nothing here can back up on its own - browsers won't let a page write
+     files unprompted. So instead of relying on memory, the button itself
+     reports how stale things are and turns gold once it has been too long. */
+  function daysSinceBackup(){
+    var last = null;
+    try { if (window.localStorage) last = window.localStorage.getItem("sprints:lastbackup"); } catch(e){}
+    if (!last) return null;
+    var then = new Date(last + "T12:00:00"), now = new Date(dayKey() + "T12:00:00");
+    return Math.round((now - then) / 86400000);
+  }
+
+  function paintBackupAge(){
+    var b = $("expBtn"), n = daysSinceBackup();
+    var logged = Object.keys(S.history).length + Object.keys(S.words).length;
+    if (logged === 0){ b.textContent = "Save a backup"; b.className = "adbtn"; return; }
+    if (n === null){
+      b.textContent = "Save a backup";
+      b.className = "adbtn due";
+      bkStat("You have never backed up. One tap protects everything.", "");
+    } else if (n >= 14){
+      b.textContent = "Back up \u00b7 " + n + "d ago";
+      b.className = "adbtn due";
+      bkStat("Last backup was " + n + " days ago.", "");
+    } else {
+      b.textContent = "Save a backup";
+      b.className = "adbtn";
+      bkStat("Backed up " + (n === 0 ? "today" : n + (n === 1 ? " day" : " days") + " ago") + ".", "ok");
+    }
+  }
+
   function bkStat(msg, kind){
     var el = $("bkStat");
     el.textContent = msg || "";
@@ -1926,6 +1927,8 @@
       a.click();
       setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
       var days = Object.keys(S.history).length;
+      try { if (window.localStorage) window.localStorage.setItem("sprints:lastbackup", dayKey()); } catch(e){}
+      paintBackupAge();
       bkStat("Saved " + days + " day" + (days===1?"":"s") + " to your files.", "ok");
     } catch(e){
       bkStat("Could not save the file.", "err");
@@ -1959,43 +1962,9 @@
     rd.readAsText(f);
   });
 
-  function openGh(){
-    $("ghRepo").value = cfg.repo || "";
-    $("ghTok").value  = cfg.tok  || "";
-    stat(configured() ? "Backup is on for " + cfg.repo : "");
-    $("ghModal").hidden = false;
-  }
-  function closeGh(){ $("ghModal").hidden = true; }
-
-  $("ghBtn").addEventListener("click", openGh);
-  $("ghClose").addEventListener("click", closeGh);
-  $("ghModal").addEventListener("click", function(e){
-    if (e.target === $("ghModal")) closeGh();
-  });
-  $("ghSave").addEventListener("click", function(){
-    cfg.repo = ($("ghRepo").value || "").trim()
-      .replace(/^https?:\/\/github\.com\//, "").replace(/\.git$/, "").replace(/\/$/, "");
-    cfg.tok  = ($("ghTok").value || "").trim();
-    cfg.path = cfg.path || "sprints.json";
-    if (!cfg.repo || !cfg.tok){ stat("Both fields are needed", "err"); return; }
-    saveCfg();
-    syncNow(false);
-    paintGh();
-  });
-  $("ghPull").addEventListener("click", function(){ restore(); });
-  $("ghForget").addEventListener("click", function(){
-    cfg.repo = ""; cfg.tok = "";
-    saveCfg(); paintGh();
-    $("ghRepo").value = ""; $("ghTok").value = "";
-    stat("Backup switched off. Nothing was deleted.", "ok");
-  });
-
-  function paintGh(){
-    var b = $("ghBtn");
-    if (configured()){ b.className = "ghbtn on"; b.textContent = "Backup on \u00b7 " + cfg.repo; }
-    else { b.className = "ghbtn"; b.textContent = "Set up backup & sync"; }
-  }
-  paintGh();
+  /* The GitHub sync engine above stays available but has no buttons: it was
+     one more thing to get wrong. Turn it on from the console if ever wanted:
+       sprintsBackup("owner/repo", "github_pat_...")  */
 
   /* auto sync on open, and again when a new day rolls over */
   if (configured()) setTimeout(function(){ syncNow(true); }, 1200);
