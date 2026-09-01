@@ -180,15 +180,39 @@
   .adbtn:active{transform:scale(.98);}
 
   /* history */
-  .mnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .weekcard{
+    position:relative;border-radius:16px;padding:18px 17px 16px;margin-bottom:20px;
+    background:linear-gradient(165deg,#1D0F17,#130A11);border:1px solid var(--line);
+    overflow:hidden;
+  }
+  .weekcard::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--violet),var(--mag) 45%,var(--gold));}
+  .wkhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+  .wklabel{font-size:9.5px;letter-spacing:2.4px;text-transform:uppercase;font-weight:700;color:var(--gold);}
+  .wkrange{font-size:11px;color:#8E7C78;}
+  .wkfig{display:flex;align-items:baseline;margin-bottom:9px;}
+  .wkfig b{font-size:34px;font-weight:700;color:var(--cream);font-variant-numeric:tabular-nums;letter-spacing:-.5px;}
+  .wkgoal{font-size:13px;color:var(--mute);}
+  .wkdays{display:flex;gap:4px;margin-top:11px;}
+  .wkday{flex:1;text-align:center;}
+  .wkday .dot{height:26px;border-radius:5px;background:#2E1C26;margin-bottom:4px;}
+  .wkday.hit .dot{background:linear-gradient(180deg,var(--gold),var(--mag));}
+  .wkday.some .dot{background:linear-gradient(180deg,var(--rose),#8E2A4C);}
+  .wkday.ads .dot{background:linear-gradient(180deg,var(--gold),#8A6B2E);}
+  .wkday.today .dot{outline:1.5px solid var(--gold);outline-offset:1px;}
+  .wkday .dl{font-size:8.5px;color:#6E5E5A;letter-spacing:.5px;}
+  .wkstat{font-size:12px;margin-top:11px;color:var(--mute);text-align:center;}
+  .wkstat.met{color:var(--teal);font-weight:600;}
+  .wkstat b{color:var(--gold);font-variant-numeric:tabular-nums;}
+  .mnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
   .mnav button{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.05);
     border:1px solid var(--line);font-size:20px;color:var(--gold);}
   .mnav button:disabled{opacity:.22;}
   .mtitle{font-size:20px;font-family:Georgia,serif;color:#fff;}
 
-  .stats{display:flex;gap:7px;margin-bottom:20px;}
+  .stats{display:flex;gap:7px;margin-bottom:22px;}
   .stat{
-    flex:1;border-radius:14px;padding:14px 8px;text-align:center;position:relative;
+    flex:1;border-radius:14px;padding:17px 8px;text-align:center;position:relative;
     background:linear-gradient(165deg,#1D0F17,#130A11);border:1px solid var(--line);
     overflow:hidden;
   }
@@ -196,12 +220,12 @@
     background:linear-gradient(90deg,var(--violet),var(--mag));}
   .stat.hit::after{background:linear-gradient(90deg,var(--mag),var(--rose));}
   .stat.streak::after{background:linear-gradient(90deg,var(--rose),var(--gold));}
-  .stat b{display:block;font-size:25px;font-weight:700;font-variant-numeric:tabular-nums;margin-bottom:3px;color:#fff;}
+  .stat b{display:block;font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;margin-bottom:3px;color:#fff;}
   .stat.hit b{color:var(--rose);} .stat.streak b{color:var(--gold);}
   .stat span{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:#8E7C78;}
 
   .chart{
-    display:flex;align-items:flex-end;gap:2px;height:172px;padding:12px 9px 0;
+    display:flex;align-items:flex-end;gap:2px;height:206px;padding:14px 10px 0;
     background:linear-gradient(165deg,#170D14,#0E0710);
     border:1px solid var(--line);border-radius:14px;
   }
@@ -213,9 +237,9 @@
   .col.ads .b{background:linear-gradient(180deg,var(--gold),#8A6B2E);}
   .col.today .b{outline:1.5px solid var(--gold);outline-offset:1px;}
   .col .lab{font-size:8px;color:#6E5E5A;margin-top:5px;font-variant-numeric:tabular-nums;height:11px;}
-  .goalline{font-size:11px;color:#6E5E5A;margin-top:8px;text-align:right;}
+  .goalline{font-size:11px;color:#6E5E5A;margin-top:10px;text-align:right;}
 
-  .legend{display:flex;gap:13px;flex-wrap:wrap;margin-top:14px;font-size:11px;color:#8E7C78;}
+  .legend{display:flex;gap:13px;flex-wrap:wrap;margin-top:16px;font-size:11px;color:#8E7C78;}
   .legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle;}
 
   /* backup */
@@ -276,6 +300,28 @@
     color:#C9AFAB;background:rgba(255,255,255,.07);
   }
   .adis:active{background:rgba(255,255,255,.14);}
+  .modal{
+    position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;
+    padding:18px;background:rgba(6,3,6,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  }
+  .modal[hidden]{display:none;}
+  .sheet{
+    width:100%;max-width:380px;border-radius:20px;padding:20px 18px 18px;
+    background:linear-gradient(165deg,#20111A,#140A11);
+    border:1px solid rgba(244,166,184,.30);
+    box-shadow:0 24px 60px -16px rgba(0,0,0,.92);
+    animation:drop .3s cubic-bezier(.2,.9,.3,1.2);
+  }
+  .sheettitle{font-size:20px;font-weight:700;color:#fff;margin-bottom:4px;}
+  .sheetsub{font-size:12.5px;color:var(--mute);line-height:1.5;margin-bottom:16px;}
+  .quick{display:flex;gap:6px;margin-top:8px;}
+  .quick button{
+    flex:1;padding:8px 4px;border-radius:9px;font-size:10px;font-weight:600;letter-spacing:.6px;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);color:#C4B2AC;
+  }
+  .quick button:active{background:rgba(244,166,184,.16);}
+  .sheetmsg{font-size:12px;min-height:16px;margin:4px 0 10px;color:#FF6B5E;text-align:center;}
+  .sheetmsg.ok{color:var(--teal);}
   .empty{font-size:13px;color:#8E7C78;text-align:center;padding:28px 10px;line-height:1.6;}
 
   @media (prefers-reduced-motion:reduce){
@@ -375,6 +421,19 @@
   </div>
 
   <div class="view" id="viewHist">
+    <div class="weekcard">
+      <div class="wkhead">
+        <span class="wklabel">This week</span>
+        <span class="wkrange" id="wkRange">&mdash;</span>
+      </div>
+      <div class="wkfig">
+        <b id="wkMin">0</b><span class="wkgoal"> / <span id="wkGoal">1400</span> min</span>
+      </div>
+      <div class="bar"><div id="wkBar" style="width:0%"></div></div>
+      <div class="wkdays" id="wkDays"></div>
+      <div class="wkstat" id="wkStat">&mdash;</div>
+    </div>
+
     <div class="mnav">
       <button id="prevM">&lsaquo;</button>
       <span class="mtitle" id="mTitle">&mdash;</span>
@@ -397,13 +456,43 @@
       <span><i style="background:#2E1C26"></i>Nothing</span>
     </div>
 
-    <h2>Day by day</h2>
-    <div id="mList"></div>
-
-    <button class="adbtn" id="editDayBtn">Add or edit a day</button>
+    <button class="adbtn" id="editDayBtn">Log a day I forgot to track</button>
 
 </div>
 
+</div>
+
+<div class="modal" id="logModal" hidden>
+  <div class="sheet">
+    <div class="sheettitle">Log a day</div>
+    <p class="sheetsub">For a day you wrote but forgot to start the tracker.</p>
+
+    <div class="field">
+      <label for="logDate">Date</label>
+      <input type="date" id="logDate">
+    </div>
+
+    <div class="field">
+      <label for="logMins">Minutes written</label>
+      <input type="number" id="logMins" min="0" max="480" step="5" placeholder="280" inputmode="numeric">
+      <div class="quick">
+        <button data-m="280">Full day</button>
+        <button data-m="180">180</button>
+        <button data-m="90">90</button>
+        <button data-m="ads">Ad day</button>
+      </div>
+    </div>
+
+    <div class="sheetmsg" id="logMsg"></div>
+
+    <div class="ctrl">
+      <button class="go wide" id="logSave">Save</button>
+      <button id="logCancel">Cancel</button>
+    </div>
+    <div class="ctrl small">
+      <button id="logDelete">Clear this day</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -642,8 +731,74 @@
     return n;
   }
 
+  /* ---------------- weekly goal ---------------- */
+  var WEEK_GOAL = GOAL * 5;   /* five full writing days buys two days off */
+
+  function weekStart(from){
+    var d = new Date(from || Date.now());
+    var wd = d.getDay();                        /* 0 = Sunday */
+    d.setDate(d.getDate() + (wd === 0 ? -6 : 1 - wd));   /* back to Monday */
+    d.setHours(0,0,0,0);
+    return d;
+  }
+
+  function weekStats(){
+    var start = weekStart(), out = { min:0, worked:0, off:0, days:[], start:start };
+    var today = dayKey(), passed = true;
+    for (var i = 0; i < 7; i++){
+      var d = new Date(start); d.setDate(start.getDate() + i);
+      var k = dayKey(d), h = S.history[k];
+      var isToday = (k === today);
+      var future = d > new Date();
+      var entry = { key:k, isToday:isToday, future:future, min:0, type:null };
+      if (h){
+        entry.min = h.min; entry.type = h.type;
+        if (h.type === "write"){ out.min += h.min; out.worked++; }
+      } else if (!future){
+        out.off++;
+      }
+      out.days.push(entry);
+    }
+    return out;
+  }
+
+  function renderWeek(){
+    var w = weekStats();
+    var end = new Date(w.start); end.setDate(w.start.getDate() + 6);
+    var MS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    $("wkRange").textContent =
+      MS[w.start.getMonth()] + " " + w.start.getDate() + " \u2013 " + MS[end.getMonth()] + " " + end.getDate();
+
+    $("wkMin").textContent = w.min;
+    $("wkGoal").textContent = WEEK_GOAL;
+    $("wkBar").style.width = Math.min(100, (w.min / WEEK_GOAL) * 100) + "%";
+
+    var DL = ["M","T","W","T","F","S","S"], html = "";
+    for (var i = 0; i < 7; i++){
+      var e = w.days[i], cls = "wkday";
+      if (e.type === "ads") cls += " ads";
+      else if (e.min >= GOAL) cls += " hit";
+      else if (e.min > 0) cls += " some";
+      if (e.isToday) cls += " today";
+      html += '<div class="' + cls + '"><div class="dot"></div><div class="dl">' + DL[i] + '</div></div>';
+    }
+    $("wkDays").innerHTML = html;
+
+    var togo = Math.max(0, WEEK_GOAL - w.min), st = $("wkStat");
+    if (togo === 0){
+      st.className = "wkstat met";
+      st.textContent = "Weekly goal met. Two days off earned.";
+    } else {
+      st.className = "wkstat";
+      var daysLeft = Math.ceil(togo / GOAL);
+      st.innerHTML = "<b>" + togo + " min</b> to go \u00b7 about <b>" + daysLeft +
+                     "</b> more full day" + (daysLeft === 1 ? "" : "s");
+    }
+  }
+
   var viewMonth = new Date();
   function renderHistory(){
+    renderWeek();
     var y = viewMonth.getFullYear(), m = viewMonth.getMonth();
     var nd = new Date(y, m + 1, 0).getDate();
     $("mTitle").textContent = MON[m] + " " + y;
@@ -671,8 +826,8 @@
     $("sHours").textContent = (tot / 60).toFixed(1);
     $("sHit").textContent = hit;
     $("sStreak").textContent = streak();
-    $("mList").innerHTML = listHtml ||
-      '<p class="empty">Nothing logged this month yet.<br>It fills in as you go.</p>';
+    var ml = $("mList");
+    if (ml) ml.innerHTML = listHtml;
     var now = new Date();
     $("nextM").disabled = (y === now.getFullYear() && m >= now.getMonth());
   }
@@ -832,6 +987,61 @@
     render();
   });
 
+  /* ---------------- log a past day ----------------
+     Uses a real in-page form rather than window.prompt, which is blocked
+     inside sandboxed previews and simply does nothing when clicked. */
+  function openLog(){
+    $("logDate").value = dayKey();
+    var cur = S.history[dayKey()];
+    $("logMins").value = (cur && cur.type === "write") ? cur.min : "";
+    $("logMsg").textContent = "";
+    $("logMsg").className = "sheetmsg";
+    $("logModal").hidden = false;
+  }
+  function closeLog(){ $("logModal").hidden = true; }
+
+  function saveLog(minsOverride){
+    var d = $("logDate").value;
+    if (!d){ msgLog("Pick a date first."); return; }
+    var msg = $("logMsg");
+
+    if (minsOverride === "ads"){
+      S.history[d] = { min:0, type:"ads" };
+      save(); renderHistory(); msgLog("Saved as an ad day.", true);
+      setTimeout(closeLog, 900);
+      return;
+    }
+
+    var raw = (minsOverride != null) ? minsOverride : $("logMins").value;
+    var n = parseInt(raw, 10);
+    if (isNaN(n) || n < 0){ msgLog("Enter the minutes you wrote."); return; }
+    if (n === 0) delete S.history[d];
+    else S.history[d] = { min: Math.min(DAY_CAP, n), type:"write" };
+    save(); renderHistory();
+    msgLog(n === 0 ? "Day cleared." : "Saved " + Math.min(DAY_CAP, n) + " min.", true);
+    setTimeout(closeLog, 900);
+  }
+  function msgLog(t, ok){
+    var m = $("logMsg");
+    m.textContent = t;
+    m.className = "sheetmsg" + (ok ? " ok" : "");
+  }
+
+  $("editDayBtn").addEventListener("click", openLog);
+  $("logCancel").addEventListener("click", closeLog);
+  $("logSave").addEventListener("click", function(){ saveLog(); });
+  $("logDelete").addEventListener("click", function(){ saveLog(0); });
+  $("logModal").addEventListener("click", function(e){
+    if (e.target === $("logModal")) closeLog();
+  });
+  [].forEach.call(document.querySelectorAll(".quick button"), function(b){
+    b.addEventListener("click", function(){
+      var v = b.getAttribute("data-m");
+      if (v === "ads") saveLog("ads");
+      else { $("logMins").value = v; msgLog(""); }
+    });
+  });
+
   $("tabToday").addEventListener("click", function(){
     $("tabToday").className = "on"; $("tabHist").className = "";
     $("viewToday").className = "view on"; $("viewHist").className = "view";
@@ -842,27 +1052,6 @@
     renderHistory();
   });
 
-  $("editDayBtn").addEventListener("click", function(){
-    var d = window.prompt("Which day?  Format: YYYY-MM-DD", dayKey());
-    if (!d) return;
-    d = d.trim();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)){ window.alert("Use the format 2026-08-04"); return; }
-    var cur = S.history[d];
-    var def = cur ? (cur.type === "ads" ? "ads" : String(cur.min)) : "";
-    var m = window.prompt("Minutes written that day.\n\n0 clears it. Type  ads  for an ad day.", def);
-    if (m === null) return;
-    m = m.trim().toLowerCase();
-    if (m === "ads"){
-      S.history[d] = { min:0, type:"ads" };
-    } else {
-      var n = parseInt(m, 10);
-      if (isNaN(n) || n < 0){ window.alert("Enter a number of minutes."); return; }
-      if (n === 0) delete S.history[d];
-      else S.history[d] = { min: Math.min(DAY_CAP, n), type:"write" };
-    }
-    save();
-    renderHistory();
-  });
 
   $("prevM").addEventListener("click", function(){
     viewMonth.setMonth(viewMonth.getMonth() - 1); renderHistory();
