@@ -252,6 +252,63 @@
     color:var(--cream);font-size:15px;font-family:inherit;}
   .field input:focus{outline:none;border-color:var(--mag);box-shadow:0 0 0 3px rgba(194,24,91,.2);}
   .field input::placeholder{color:#5E5450;}
+  .whero{
+    position:relative;border-radius:18px;padding:16px 16px 14px;margin-bottom:16px;
+    background:linear-gradient(165deg,#1D0F17,#130A11);border:1px solid var(--line);overflow:hidden;
+  }
+  .whero::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--teal),var(--rose) 50%,var(--gold));}
+  .whlabel{font-size:9.5px;letter-spacing:2.4px;text-transform:uppercase;font-weight:700;color:var(--gold);margin-bottom:5px;}
+  .whfig b{font-size:40px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-1px;line-height:1;}
+  .whsub{font-size:12.5px;color:var(--mute);margin:7px 0 11px;}
+  .whsub b{color:var(--rose);font-variant-numeric:tabular-nums;}
+
+  .wrow{
+    display:flex;align-items:center;gap:10px;padding:9px 10px 9px 13px;
+    border-radius:10px;margin-bottom:3px;background:#170D14;position:relative;
+  }
+  .wrow::before{content:'';position:absolute;left:0;top:7px;bottom:7px;width:3px;
+    border-radius:99px;background:linear-gradient(180deg,var(--rose),var(--mag));}
+  .wrow .wn{width:22px;font-size:12px;font-weight:700;color:var(--gold);}
+  .wrow .wt{flex:1;font-size:12.5px;color:#C4B2AC;font-variant-numeric:tabular-nums;}
+  .wrow .ww{font-size:16px;font-weight:700;color:var(--cream);font-variant-numeric:tabular-nums;}
+  .wrow .wr{width:74px;text-align:right;font-size:11px;color:#8E7C78;font-variant-numeric:tabular-nums;}
+  .wrow .wx{width:24px;height:24px;border-radius:50%;font-size:15px;color:#6E5E5A;background:rgba(255,255,255,.05);}
+  .wrow .wx:active{background:rgba(255,90,90,.22);color:#FF8B7E;}
+
+  .wmchart{
+    display:flex;align-items:flex-end;gap:2px;height:118px;padding:11px 9px 0;
+    background:#150C12;border-radius:13px;border:1px solid var(--line);
+  }
+  .wmchart .c{flex:1;height:100%;display:flex;align-items:flex-end;border-radius:3px;}
+  .wmchart .c i{
+    display:block;width:100%;border-radius:2px 2px 0 0;min-height:2px;
+    background:linear-gradient(180deg,var(--rose),#7E2545);
+  }
+  .wmchart .c.big i{background:linear-gradient(180deg,var(--gold),var(--mag));}
+  .wmchart .c.today{outline:1.5px solid var(--gold);outline-offset:1px;}
+  .wmchart .c.none i{background:#2A1A22;}
+  .wmstat{
+    display:flex;justify-content:space-between;font-size:11.5px;color:#8E7C78;
+    margin-top:10px;padding:0 3px;
+  }
+  .wmstat b{color:var(--cream);font-variant-numeric:tabular-nums;font-size:13px;}
+  .w7{display:flex;gap:4px;}
+  .w7 .d{flex:1;text-align:center;}
+  .w7 .d .bar7{height:44px;display:flex;align-items:flex-end;}
+  .w7 .d .fill{width:100%;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--rose),#7E2545);min-height:2px;}
+  .w7 .d .n{font-size:9px;color:#8E7C78;margin-top:4px;font-variant-numeric:tabular-nums;}
+  .w7 .d .l{font-size:8.5px;color:#6E5E5A;}
+  .w7 .d.today .l{color:var(--gold);font-weight:700;}
+  .w7 .d.today .fill{outline:1.5px solid var(--gold);outline-offset:1px;}
+  .rateout{
+    text-align:center;font-size:14px;color:var(--mute);
+    padding:11px;border-radius:12px;margin:4px 0 6px;
+    background:rgba(244,166,184,.06);border:1px solid var(--line);
+  }
+  .rateout b{font-size:22px;color:var(--rose);font-variant-numeric:tabular-nums;}
+  .tworow{display:flex;gap:9px;}
+  .tworow .field{flex:1;}
   .syncstat{font-size:12.5px;color:var(--mute);text-align:center;margin-top:12px;}
   .syncstat.ok{color:var(--teal);} .syncstat.err{color:#FF6B5E;}
   .steps{margin:0 0 18px 18px;}
@@ -349,6 +406,7 @@
   <div class="tabs">
     <button id="tabToday" class="on">Today</button>
     <button id="tabHist">History</button>
+    <button id="tabWords">Words</button>
   </div>
 
   <div class="view on" id="viewToday">
@@ -460,6 +518,77 @@
 
 </div>
 
+  <div class="view" id="viewWords" hidden>
+    <div class="mnav">
+      <button id="wPrev">&lsaquo;</button>
+      <span id="wDayLabel">Today</span>
+      <button id="wNext">&rsaquo;</button>
+    </div>
+    <div class="whero">
+      <div class="whlabel" id="whLabel">Words today</div>
+      <div class="whfig"><b id="wTotal">0</b></div>
+      <div class="whsub" id="wSub">&mdash;</div>
+      <div class="bar"><div id="wBar" style="width:0%"></div></div>
+    </div>
+
+    <h2>Sessions</h2>
+    <div id="wList"></div>
+
+    <button class="adbtn" id="addWordBtn">Add a session</button>
+
+    <div class="mnav" style="margin-top:20px">
+      <button id="wmPrev">&lsaquo;</button>
+      <span id="wmLabel">&mdash;</span>
+      <button id="wmNext">&rsaquo;</button>
+    </div>
+    <div class="wmchart" id="wmChart"></div>
+    <div class="wmstat" id="wmStat">&mdash;</div>
+  </div>
+</div>
+
+<div class="modal" id="wordModal" hidden>
+  <div class="sheet">
+    <div class="sheettitle" id="wsTitle">Add a session</div>
+    <p class="sheetsub">Words per hour is worked out for you.</p>
+
+    <div class="field">
+      <label for="wsDate">Date</label>
+      <input type="date" id="wsDate">
+    </div>
+
+    <div class="tworow">
+      <div class="field">
+        <label for="wsNum">Session</label>
+        <input type="number" id="wsNum" min="1" max="12" step="1" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="wsMins">Minutes</label>
+        <input type="number" id="wsMins" min="1" max="480" step="5" placeholder="90" inputmode="numeric">
+      </div>
+    </div>
+    <div class="quick" id="wsQuick">
+      <button data-d="90">90</button>
+      <button data-d="60">60</button>
+      <button data-d="50">50</button>
+      <button data-d="40">40</button>
+    </div>
+
+    <div class="field" style="margin-top:12px">
+      <label for="wsWords">Words written</label>
+      <input type="number" id="wsWords" min="0" step="50" placeholder="1200" inputmode="numeric">
+    </div>
+
+    <div class="rateout" id="wsRate">&mdash;</div>
+    <div class="sheetmsg" id="wsMsg"></div>
+
+    <div class="ctrl">
+      <button class="go wide" id="wsSave">Save</button>
+      <button id="wsCancel">Cancel</button>
+    </div>
+    <div class="ctrl small">
+      <button id="wsDelete" hidden>Delete this session</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal" id="logModal" hidden>
@@ -546,6 +675,7 @@
   if (!S.session.actual) S.session.actual = {};
   if (!S.session.absorbed) S.session.absorbed = [];
   if (!S.session.alerted) S.session.alerted = [];
+  if (!S.words) S.words = {};
 
 
   /* Earlier builds stored under sprints:v1 / v2. Salvage anything left there. */
@@ -994,10 +1124,7 @@
      inside sandboxed previews and simply does nothing when clicked. */
   function openLog(){
     $("logDate").value = dayKey();
-    var cur = S.history[dayKey()];
-    $("logMins").value = (cur && cur.type === "write") ? cur.min : "";
-    $("logMsg").textContent = "";
-    $("logMsg").className = "sheetmsg";
+    loadLogDate();
     $("logModal").hidden = false;
   }
   function closeLog(){ $("logModal").hidden = true; }
@@ -1029,6 +1156,24 @@
     m.className = "sheetmsg" + (ok ? " ok" : "");
   }
 
+  /* pick any date and it loads what is already stored, so this edits as
+     well as adds - you are never stuck with a wrong number */
+  function loadLogDate(){
+    var d = $("logDate").value;
+    var cur = d ? S.history[d] : null;
+    if (cur && cur.type === "ads"){
+      $("logMins").value = "";
+      msgLog("Currently logged as an ad day.", true);
+    } else if (cur){
+      $("logMins").value = cur.min;
+      msgLog("Currently " + cur.min + " min. Change it and save.", true);
+    } else {
+      $("logMins").value = "";
+      msgLog("");
+    }
+  }
+  $("logDate").addEventListener("change", loadLogDate);
+
   $("editDayBtn").addEventListener("click", openLog);
   $("logCancel").addEventListener("click", closeLog);
   $("logSave").addEventListener("click", function(){ saveLog(); });
@@ -1044,14 +1189,281 @@
     });
   });
 
-  $("tabToday").addEventListener("click", function(){
-    $("tabToday").className = "on"; $("tabHist").className = "";
-    $("viewToday").className = "view on"; $("viewHist").className = "view";
+  /* ---------------- words log ---------------- */
+  if (!S.words) S.words = {};
+
+
+
+  var wView = dayKey();          /* the day being looked at, not always today */
+  function wDay(k){ return S.words[k || wView] || []; }
+  function hhmm(v){                       /* "14:30" -> minutes */
+    var p = (v || "").split(":");
+    if (p.length !== 2) return null;
+    var h = parseInt(p[0],10), m = parseInt(p[1],10);
+    if (isNaN(h) || isNaN(m)) return null;
+    return h*60 + m;
+  }
+  function clock12(v){
+    var t = hhmm(v); if (t === null) return "\u2014";
+    var h = Math.floor(t/60), m = t%60;
+    var ap = h < 12 ? "am" : "pm";
+    return (h%12 || 12) + ":" + (m<10?"0":"") + m + ap;
+  }
+  function sessionMins(s){
+    if (typeof s.mins === "number") return s.mins;
+    var a = hhmm(s.start), b = hhmm(s.end);   /* older entries kept working */
+    if (a === null || b === null) return 0;
+    var d = b - a;
+    if (d < 0) d += 24*60;
+    return d;
+  }
+  function wph(s){
+    var m = sessionMins(s);
+    return m > 0 ? Math.round(s.words / (m/60)) : 0;
+  }
+  function dayWords(k){
+    return wDay(k).reduce(function(a,s){ return a + (s.words||0); }, 0);
+  }
+  function dayWordMins(k){
+    return wDay(k).reduce(function(a,s){ return a + sessionMins(s); }, 0);
+  }
+
+  function shiftWordDay(n){
+    var d = new Date(wView + "T12:00:00");
+    d.setDate(d.getDate() + n);
+    if (d > new Date()) return;              /* no logging the future */
+    wView = dayKey(d);
+    renderWords();
+  }
+  $("wPrev").addEventListener("click", function(){ shiftWordDay(-1); });
+  $("wNext").addEventListener("click", function(){ shiftWordDay(1); });
+
+  function renderWords(){
+    var list = wDay(), total = dayWords(wView), mins = dayWordMins(wView);
+
+    var dv = new Date(wView + "T12:00:00");
+    var DN = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    var MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    $("wDayLabel").textContent = (wView === dayKey())
+      ? "Today" : DN[dv.getDay()] + " " + dv.getDate() + " " + MN[dv.getMonth()];
+    $("wNext").disabled = (wView === dayKey());
+    $("whLabel").textContent = (wView === dayKey()) ? "Words today" : "Words that day";
+    $("wTotal").textContent = total.toLocaleString();
+
+    var rate = mins > 0 ? Math.round(total / (mins/60)) : 0;
+    $("wSub").innerHTML = list.length
+      ? "<b>" + rate.toLocaleString() + "</b> words/hour \u00b7 " + list.length +
+        " session" + (list.length===1?"":"s") + " \u00b7 " + mins + " min"
+      : (wView === dayKey() ? "No sessions logged yet today." : "Nothing logged for this day.");
+
+    /* the bar is words against the best day in the last 30, so it stays meaningful */
+    var best = 0;
+    for (var i = 0; i < 30; i++){
+      var d = new Date(); d.setDate(d.getDate()-i);
+      best = Math.max(best, dayWords(dayKey(d)));
+    }
+    $("wBar").style.width = (best > 0 ? Math.min(100, total/best*100) : 0) + "%";
+
+    var html = "";
+    for (var j = 0; j < list.length; j++){
+      var s = list[j];
+      html += '<div class="wrow" data-e="' + j + '">' +
+                '<span class="wn">' + (s.n || (j+1)) + '</span>' +
+                '<span class="wt">' + sessionMins(s) + ' min</span>' +
+                '<span class="ww">' + (s.words||0).toLocaleString() + '</span>' +
+                '<span class="wr">' + wph(s).toLocaleString() + '/hr</span>' +
+                '<button class="wx" data-i="' + j + '">&times;</button>' +
+              '</div>';
+    }
+    $("wList").innerHTML = html ||
+      '<p class="empty">Nothing logged for this day.<br>Tap Add a session below.</p>';
+
+    [].forEach.call($("wList").querySelectorAll(".wx"), function(b){
+      b.addEventListener("click", function(ev){
+        ev.stopPropagation();                 /* don't also open the editor */
+        var i = parseInt(b.getAttribute("data-i"),10);
+        var arr = wDay(); arr.splice(i,1);
+        if (arr.length) S.words[wView] = arr; else delete S.words[wView];
+        save(); renderWords();
+      });
+    });
+    [].forEach.call($("wList").querySelectorAll(".wrow"), function(r){
+      r.addEventListener("click", function(){
+        openWords(parseInt(r.getAttribute("data-e"),10));
+      });
+    });
+
+    renderWordMonth();
+  }
+
+
+  /* ---- month view of words ---- */
+  var wMonth = new Date();
+
+  function renderWordMonth(){
+    var y = wMonth.getFullYear(), m = wMonth.getMonth();
+    var MN = ["January","February","March","April","May","June",
+              "July","August","September","October","November","December"];
+    $("wmLabel").textContent = MN[m] + " " + y;
+
+    var now = new Date();
+    var isThisMonth = (y === now.getFullYear() && m === now.getMonth());
+    $("wmNext").disabled = isThisMonth;
+
+    var days = new Date(y, m+1, 0).getDate();
+    var vals = [], total = 0, best = 0, mins = 0, logged = 0;
+    for (var d = 1; d <= days; d++){
+      var k = dayKey(new Date(y, m, d));
+      var w = dayWords(k), mm = dayWordMins(k);
+      vals.push({ k:k, w:w, d:d });
+      total += w; mins += mm;
+      if (w > 0) logged++;
+      if (w > best) best = w;
+    }
+
+    var html = "";
+    for (var i = 0; i < vals.length; i++){
+      var v = vals[i];
+      var pct = best > 0 ? (v.w / best * 100) : 0;
+      var cls = "c" + (v.w === 0 ? " none" : (v.w >= best * 0.9 ? " big" : ""));
+      if (v.k === dayKey()) cls += " today";
+      html += '<div class="' + cls + '" data-k="' + v.k + '" title="' + v.w + '">' +
+              '<i style="height:' + (v.w === 0 ? 2 : Math.max(4, pct)) + '%"></i></div>';
+    }
+    $("wmChart").innerHTML = html;
+
+    [].forEach.call($("wmChart").querySelectorAll(".c"), function(el){
+      el.addEventListener("click", function(){
+        var k = el.getAttribute("data-k");
+        if (k && new Date(k + "T12:00:00") <= new Date()){ wView = k; renderWords(); }
+      });
+    });
+
+    var rate = mins > 0 ? Math.round(total / (mins/60)) : 0;
+    $("wmStat").innerHTML =
+      '<span><b>' + total.toLocaleString() + '</b> words</span>' +
+      '<span><b>' + best.toLocaleString() + '</b> best day</span>' +
+      '<span><b>' + rate.toLocaleString() + '</b> per hour</span>' +
+      '<span><b>' + logged + '</b> days</span>';
+  }
+
+  $("wmPrev").addEventListener("click", function(){
+    wMonth = new Date(wMonth.getFullYear(), wMonth.getMonth()-1, 1);
+    renderWordMonth();
   });
-  $("tabHist").addEventListener("click", function(){
-    $("tabHist").className = "on"; $("tabToday").className = "";
-    $("viewHist").className = "view on"; $("viewToday").className = "view";
-    renderHistory();
+  $("wmNext").addEventListener("click", function(){
+    var n = new Date(wMonth.getFullYear(), wMonth.getMonth()+1, 1), now = new Date();
+    if (n > now) return;
+    wMonth = n; renderWordMonth();
+  });
+
+  /* --- add-session dialog --- */
+  var wsEdit = null;                      /* index being edited, or null to add */
+  function openWords(idx){
+    var list = wDay();
+    wsEdit = (typeof idx === "number") ? idx : null;
+    if (wsEdit !== null && list[wsEdit]){
+      var e = list[wsEdit];
+      $("wsDate").value  = wView;
+      $("wsNum").value   = e.n || (wsEdit + 1);
+      $("wsMins").value  = sessionMins(e);
+      $("wsWords").value = e.words;
+      $("wsTitle").textContent = "Edit session";
+      $("wsDelete").hidden = false;
+    } else {
+      $("wsDate").value  = wView;
+      $("wsNum").value   = list.length + 1;
+      $("wsMins").value  = "";
+      $("wsWords").value = "";
+      $("wsTitle").textContent = "Add a session";
+      $("wsDelete").hidden = true;
+    }
+    wsMsg(""); liveRate();
+    $("wordModal").hidden = false;
+  }
+  function closeWords(){ $("wordModal").hidden = true; }
+  function wsMsg(t, ok){
+    var m = $("wsMsg");
+    m.textContent = t;
+    m.className = "sheetmsg" + (ok ? " ok" : "");
+  }
+  /* show the rate as soon as both numbers are in */
+  function liveRate(){
+    var mins = parseInt($("wsMins").value, 10), w = parseInt($("wsWords").value, 10);
+    if (!isNaN(mins) && mins > 0 && !isNaN(w) && w >= 0){
+      $("wsRate").innerHTML = "<b>" + Math.round(w / (mins/60)).toLocaleString() + "</b> words per hour";
+    } else {
+      $("wsRate").innerHTML = "&mdash;";
+    }
+  }
+  $("wsDate").addEventListener("change", function(){
+    if (wsEdit === null) $("wsNum").value = (S.words[$("wsDate").value] || []).length + 1;
+  });
+  $("wsMins").addEventListener("input", liveRate);
+  $("wsWords").addEventListener("input", liveRate);
+  [].forEach.call($("wsQuick").querySelectorAll("button"), function(b){
+    b.addEventListener("click", function(){
+      $("wsMins").value = b.getAttribute("data-d");
+      liveRate();
+    });
+  });
+
+  function saveWords(){
+    var d = $("wsDate").value;
+    var num  = parseInt($("wsNum").value, 10);
+    var mins = parseInt($("wsMins").value, 10);
+    var n    = parseInt($("wsWords").value, 10);
+    if (!d){ wsMsg("Pick a date."); return; }
+    if (isNaN(mins) || mins <= 0){ wsMsg("How many minutes was it?"); return; }
+    if (isNaN(n) || n < 0){ wsMsg("Enter the word count."); return; }
+    if (isNaN(num) || num < 1) num = wDay(d).length + 1;
+
+    if (!S.words[d]) S.words[d] = [];
+    var rec = { n:num, mins:mins, words:n };
+    if (wsEdit !== null && S.words[wView] && S.words[wView][wsEdit]){
+      if (d === wView) S.words[d][wsEdit] = rec;         /* same day: replace */
+      else {                                             /* moved to another day */
+        S.words[wView].splice(wsEdit, 1);
+        if (!S.words[wView].length) delete S.words[wView];
+        S.words[d].push(rec);
+      }
+    } else {
+      S.words[d].push(rec);
+    }
+    S.words[d].sort(function(a,b){ return (a.n||0) - (b.n||0); });
+    save(); renderWords();
+    wsMsg((wsEdit !== null ? "Updated \u00b7 " : "Saved \u00b7 ") +
+          Math.round(n/(mins/60)).toLocaleString() + " words/hour", true);
+    setTimeout(closeWords, 1000);
+  }
+
+  $("addWordBtn").addEventListener("click", openWords);
+  $("wsCancel").addEventListener("click", closeWords);
+  $("wsSave").addEventListener("click", saveWords);
+  $("wsDelete").addEventListener("click", function(){
+    if (wsEdit === null) return;
+    var arr = wDay(); arr.splice(wsEdit, 1);
+    if (arr.length) S.words[wView] = arr; else delete S.words[wView];
+    save(); renderWords(); closeWords();
+  });
+  $("wordModal").addEventListener("click", function(e){
+    if (e.target === $("wordModal")) closeWords();
+  });
+
+  var TABS = [["tabToday","viewToday",null],
+              ["tabHist","viewHist",function(){ renderHistory(); }],
+              ["tabWords","viewWords",function(){ wView = dayKey(); renderWords(); }]];
+  function showTab(id){
+    TABS.forEach(function(t){
+      var on = (t[0] === id);
+      $(t[0]).className = on ? "on" : "";
+      $(t[1]).className = on ? "view on" : "view";
+      $(t[1]).hidden = false;
+      if (on && t[2]) t[2]();
+    });
+  }
+  TABS.forEach(function(t){
+    $(t[0]).addEventListener("click", function(){ showTab(t[0]); });
   });
 
 
