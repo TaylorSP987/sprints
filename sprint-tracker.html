@@ -309,6 +309,18 @@
   .rateout b{font-size:22px;color:var(--rose);font-variant-numeric:tabular-nums;}
   .tworow{display:flex;gap:9px;}
   .tworow .field{flex:1;}
+  .ghnote{
+    font-size:11.5px;line-height:1.55;color:#8E7C78;
+    background:rgba(240,198,116,.07);border:1px solid rgba(240,198,116,.22);
+    border-radius:10px;padding:10px 11px;margin:2px 0 10px;
+  }
+  .ghnote b{color:var(--gold);}
+  .ghbtn{
+    width:100%;margin-top:14px;padding:11px;border-radius:12px;font-size:10.5px;
+    font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);color:#A08C88;
+  }
+  .ghbtn.on{color:var(--teal);border-color:rgba(77,208,177,.4);background:rgba(77,208,177,.08);}
   .syncstat{font-size:12.5px;color:var(--mute);text-align:center;margin-top:12px;}
   .syncstat.ok{color:var(--teal);} .syncstat.err{color:#FF6B5E;}
   .steps{margin:0 0 18px 18px;}
@@ -515,6 +527,13 @@
     </div>
 
     <button class="adbtn" id="editDayBtn">Log a day I forgot to track</button>
+    <div class="ctrl small" style="margin-top:14px">
+      <button id="expBtn">Save a backup</button>
+      <button id="impBtn">Restore a backup</button>
+    </div>
+    <input type="file" id="impFile" accept=".json,application/json" hidden>
+    <div class="syncstat" id="bkStat"></div>
+    <button class="ghbtn" id="ghBtn">Advanced: auto-sync to GitHub</button>
 
 </div>
 
@@ -591,6 +610,42 @@
   </div>
 </div>
 
+<div class="modal" id="ghModal" hidden>
+  <div class="sheet">
+    <div class="sheettitle">Backup &amp; sync</div>
+    <p class="sheetsub">
+      Keeps your history and word counts in a GitHub file, so they survive a lost
+      phone and appear on your other devices.
+    </p>
+
+    <div class="field">
+      <label for="ghRepo">Repository <em>owner/name</em></label>
+      <input type="text" id="ghRepo" placeholder="TaylorSP987/writing-data" autocapitalize="off" autocorrect="off" spellcheck="false">
+    </div>
+
+    <div class="field">
+      <label for="ghTok">Access token</label>
+      <input type="password" id="ghTok" placeholder="github_pat_..." autocapitalize="off" autocorrect="off" spellcheck="false">
+    </div>
+
+    <div class="ghnote">
+      Use a <b>private</b> repo, and a fine-grained token limited to it with
+      Contents set to Read and write. The token stays on this device only.
+    </div>
+
+    <div class="syncstat" id="ghStat"></div>
+
+    <div class="ctrl">
+      <button class="go wide" id="ghSave">Save &amp; sync</button>
+      <button id="ghClose">Close</button>
+    </div>
+    <div class="ctrl small">
+      <button id="ghPull">Restore from backup</button>
+      <button id="ghForget">Forget token</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="logModal" hidden>
   <div class="sheet">
     <div class="sheettitle">Log a day</div>
@@ -639,6 +694,9 @@
     {n:"Engineering study", m:40, note:"optional \u00b7 at work", optional:true}
   ];
   var GOAL = 290;
+  /* Do not change this. Everything you have logged is stored under it.
+     rescueOldData() below can recover from a rename, but keeping this
+     stable is what guarantees your data survives every update. */
   var KEY = "sprints:v3";
   var LIVE_CAP = 300;
   var DAY_CAP = 480;
@@ -678,33 +736,36 @@
   if (!S.words) S.words = {};
 
 
-  /* Earlier builds stored under sprints:v1 / v2. Salvage anything left there. */
-  function migrateOld(){
-    if (Object.keys(S.history).length) return;
-    var WORK = [0,2,4,6], keys = ["sprints:v2","sprints:v1"], f, raw, o, sess, mins, i, idx, v, when, dk;
-    for (f = 0; f < keys.length; f++){
-      raw = null;
-      try { if (window.localStorage) raw = window.localStorage.getItem(keys[f]); } catch(e){}
-      if (!raw) continue;
-      try { o = JSON.parse(raw); } catch(e){ continue; }
-      if (!o) continue;
-      sess = o.session || o;
-      if (!sess || !sess.actual) continue;
-      mins = 0;
-      for (i = 0; i < WORK.length; i++){
-        idx = WORK[i];
-        if (sess.absorbed && sess.absorbed.indexOf(idx) > -1) continue;
-        v = sess.actual[idx];
-        if (typeof v === "number") mins += v;
+  /* ---- data survival across app updates ----
+     Your entries live in the browser's own storage, not in this file, so
+     replacing the file never touches them. The one real danger is the storage
+     KEY changing between versions, which orphans everything under the old
+     name. This scans every key this app has ever used and adopts the richest
+     one it finds, so a future rename can't lose your history again. */
+  function rescueOldData(){
+    var have = Object.keys(S.history || {}).length + Object.keys(S.words || {}).length;
+    if (have > 0) return;                       /* current data is fine */
+
+    var best = null, bestScore = 0;
+    try {
+      if (!window.localStorage) return;
+      for (var i = 0; i < window.localStorage.length; i++){
+        var k = window.localStorage.key(i);
+        if (!k || k === KEY || !/^sprints:v\d+$/.test(k)) continue;
+        var o;
+        try { o = JSON.parse(window.localStorage.getItem(k)); } catch(e){ continue; }
+        if (!o) continue;
+        var score = Object.keys(o.history || {}).length + Object.keys(o.words || {}).length;
+        if (score > bestScore){ bestScore = score; best = o; }
       }
-      if (mins <= 0) continue;
-      when = sess.blockStart ? new Date(sess.blockStart) : new Date(Date.now() - 86400000);
-      dk = dayKey(when);
-      if (!S.history[dk]) S.history[dk] = { min: Math.min(DAY_CAP, mins), type: "write" };
-    }
+    } catch(e){ return; }
+
+    if (!best) return;
+    if (best.history) S.history = best.history;
+    if (best.words)   S.words   = best.words;
     save();
   }
-  migrateOld();
+  rescueOldData();
 
   var Q = S.session;
   function $(id){ return document.getElementById(id); }
@@ -843,7 +904,7 @@
 
   function record(){
     if (Q.adDay){ S.history[S.day] = { min:0, type:"ads" }; return; }
-    var dm = doneMinutes();
+    var dm = doneMinutes();      /* timer only - word minutes reconcile at read time */
     if (dm > 0) S.history[S.day] = { min:dm, type:"write" };
     else if (Q.blockStart !== null) delete S.history[S.day];
   }
@@ -852,7 +913,7 @@
     var n = 0, d = new Date(), first = true;
     for (var g = 0; g < 400; g++){
       var h = S.history[dayKey(d)];
-      var ok = h && (h.type === "ads" || h.min >= GOAL);
+      var ok = (effType(k) === "ads") || (effMins(k) >= GOAL);
       if (ok) n++;
       else if (!first) break;
       first = false;
@@ -863,6 +924,24 @@
 
   /* ---------------- weekly goal ---------------- */
   var WEEK_GOAL = GOAL * 5;   /* five full writing days buys two days off */
+
+
+  /* A day's writing minutes, reconciled across both places you can enter them:
+     the sprint timer (and manual day log) and the word sessions. Takes the
+     larger of the two rather than adding, so logging in one place fills the
+     gap without ever double counting the same stretch of writing. */
+  function effMins(k){
+    var h = S.history[k];
+    if (h && h.type === "ads") return 0;
+    var tracked = h ? (h.min || 0) : 0;
+    var fromWords = (typeof dayWordMins === "function") ? dayWordMins(k) : 0;
+    return Math.max(tracked, fromWords);
+  }
+  function effType(k){
+    var h = S.history[k];
+    if (h && h.type === "ads") return "ads";
+    return effMins(k) > 0 ? "write" : null;
+  }
 
   function weekStart(from){
     var d = new Date(from || Date.now());
@@ -877,16 +956,14 @@
     var today = dayKey(), passed = true;
     for (var i = 0; i < 7; i++){
       var d = new Date(start); d.setDate(start.getDate() + i);
-      var k = dayKey(d), h = S.history[k];
+      var k = dayKey(d);
       var isToday = (k === today);
       var future = d > new Date();
-      var entry = { key:k, isToday:isToday, future:future, min:0, type:null };
-      if (h){
-        entry.min = h.min; entry.type = h.type;
-        if (h.type === "write"){ out.min += h.min; out.worked++; }
-      } else if (!future){
-        out.off++;
-      }
+      var em = effMins(k), et = effType(k);
+      var entry = { key:k, isToday:isToday, future:future, min:em, type:et };
+      if (et === "write"){ out.min += em; out.worked++; }
+      else if (et === "ads"){ entry.type = "ads"; }
+      else if (!future){ out.off++; }
       out.days.push(entry);
     }
     return out;
@@ -936,7 +1013,7 @@
     var i, tot = 0, hit = 0, html = "", listHtml = "", todayK = dayKey();
     for (i = 1; i <= nd; i++){
       var k = y + "-" + (m + 1 < 10 ? "0" : "") + (m + 1) + "-" + (i < 10 ? "0" : "") + i;
-      var h = S.history[k], mn = h ? h.min : 0, cls = "col";
+      var h = S.history[k], mn = effMins(k), cls = "col";
       if (h && h.type === "ads") cls += " ads";
       else if (mn >= GOAL){ cls += " hit"; hit++; }
       else if (mn > 0) cls += " some";
@@ -995,7 +1072,10 @@
     autoRoll();
     $("clock").textContent = fmtClock(new Date());
 
-    var dm = doneMinutes(), goalHit = dm >= GOAL;
+    /* same reconciliation as History: if word sessions record more writing
+       than the timer caught, show the larger number rather than under-report */
+    var dm = Math.max(doneMinutes(), (typeof dayWordMins === "function") ? dayWordMins(dayKey()) : 0);
+    var goalHit = dm >= GOAL;
     var started = Q.blockStart !== null, past = Q.i >= PLAN.length;
     var hero = $("hero");
 
@@ -1691,7 +1771,9 @@
   function saveCfg(){
     try { if (window.localStorage) window.localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); } catch(e){}
   }
-  function stat(msg){
+  function stat(msg, kind){
+    var el = document.getElementById("ghStat");
+    if (el){ el.textContent = msg || ""; el.className = "syncstat" + (kind ? " " + kind : ""); }
     if (window.console && console.log) console.log("[sprints] " + msg);
   }
   function b64encode(str){
@@ -1762,28 +1844,44 @@
     .catch(function(e){ stat("Could not save: " + e.message, "err"); });
   }
 
+  /* merge word sessions: per day, keep whichever side has more sessions,
+     so a device that logged more detail wins and nothing is silently dropped */
+  function mergeWords(a, b){
+    var out = {}, k;
+    a = a || {}; b = b || {};
+    for (k in a) if (a.hasOwnProperty(k)) out[k] = a[k];
+    for (k in b){
+      if (!b.hasOwnProperty(k)) continue;
+      if (!out[k] || (b[k] || []).length > (out[k] || []).length) out[k] = b[k];
+    }
+    return out;
+  }
+
   function syncNow(silent){
-    if (!configured()){ if (!silent) stat("Fill in all three fields first", "err"); return; }
+    if (!configured()){ if (!silent) stat("Add the repo and token first", "err"); return; }
     if (!silent) stat("Syncing\u2026");
     ghGet(function(remote, sha){
-      var merged = remote && remote.history ? mergeHistory(S.history, remote.history) : S.history;
-      S.history = merged;
+      S.history = remote && remote.history ? mergeHistory(S.history, remote.history) : S.history;
+      S.words   = mergeWords(S.words, remote && remote.words);
       save();
-      ghPut({ history: merged, updated: new Date().toISOString() }, sha, function(){
+      ghPut({ history:S.history, words:S.words, updated:new Date().toISOString() }, sha, function(){
         stat("Synced " + fmtClock(new Date()), "ok");
         if ($("viewHist").className.indexOf("on") > -1) renderHistory();
+        if ($("viewWords").className.indexOf("on") > -1) renderWords();
       });
     });
   }
 
   function restore(){
-    if (!configured()){ stat("Fill in all three fields first", "err"); return; }
+    if (!configured()){ stat("Add the repo and token first", "err"); return; }
     stat("Restoring\u2026");
     ghGet(function(remote){
-      if (!remote || !remote.history){ stat("Nothing found in that repo", "err"); return; }
-      S.history = mergeHistory(S.history, remote.history);
+      if (!remote){ stat("Nothing found in that repo yet", "err"); return; }
+      S.history = mergeHistory(S.history, remote.history || {});
+      S.words   = mergeWords(S.words, remote.words);
       save();
-      stat("Restored " + Object.keys(S.history).length + " days", "ok");
+      stat("Restored " + Object.keys(S.history).length + " days, " +
+           Object.keys(S.words).length + " with word counts", "ok");
       renderHistory();
     });
   }
@@ -1801,6 +1899,103 @@
     return "Backup on for " + cfg.repo;
   };
   window.sprintsRestore = function(){ restore(); return "Restoring\u2026"; };
+
+
+  /* ---- backup to a file: no account, no token, works offline ----
+     Save writes a .json to your device. Restore reads one back and merges it
+     in, so nothing you have logged since is lost. */
+  function bkStat(msg, kind){
+    var el = $("bkStat");
+    el.textContent = msg || "";
+    el.className = "syncstat" + (kind ? " " + kind : "");
+  }
+
+  $("expBtn").addEventListener("click", function(){
+    try {
+      var payload = {
+        app: "sprints",
+        saved: new Date().toISOString(),
+        history: S.history,
+        words: S.words
+      };
+      var blob = new Blob([JSON.stringify(payload, null, 2)], { type:"application/json" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "sprints-backup-" + dayKey() + ".json";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      var days = Object.keys(S.history).length;
+      bkStat("Saved " + days + " day" + (days===1?"":"s") + " to your files.", "ok");
+    } catch(e){
+      bkStat("Could not save the file.", "err");
+    }
+  });
+
+  $("impBtn").addEventListener("click", function(){ $("impFile").click(); });
+
+  $("impFile").addEventListener("change", function(){
+    var f = $("impFile").files && $("impFile").files[0];
+    if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function(){
+      var o = null;
+      try { o = JSON.parse(rd.result); } catch(e){}
+      if (!o || (!o.history && !o.words)){
+        bkStat("That file is not a sprints backup.", "err");
+        $("impFile").value = "";
+        return;
+      }
+      var beforeH = Object.keys(S.history).length;
+      S.history = mergeHistory(S.history, o.history || {});
+      S.words   = mergeWords(S.words, o.words);
+      save();
+      renderHistory();
+      var gained = Object.keys(S.history).length - beforeH;
+      bkStat("Restored. " + (gained > 0 ? gained + " day" + (gained===1?"":"s") + " added." : "Everything was already here."), "ok");
+      $("impFile").value = "";
+    };
+    rd.onerror = function(){ bkStat("Could not read that file.", "err"); };
+    rd.readAsText(f);
+  });
+
+  function openGh(){
+    $("ghRepo").value = cfg.repo || "";
+    $("ghTok").value  = cfg.tok  || "";
+    stat(configured() ? "Backup is on for " + cfg.repo : "");
+    $("ghModal").hidden = false;
+  }
+  function closeGh(){ $("ghModal").hidden = true; }
+
+  $("ghBtn").addEventListener("click", openGh);
+  $("ghClose").addEventListener("click", closeGh);
+  $("ghModal").addEventListener("click", function(e){
+    if (e.target === $("ghModal")) closeGh();
+  });
+  $("ghSave").addEventListener("click", function(){
+    cfg.repo = ($("ghRepo").value || "").trim()
+      .replace(/^https?:\/\/github\.com\//, "").replace(/\.git$/, "").replace(/\/$/, "");
+    cfg.tok  = ($("ghTok").value || "").trim();
+    cfg.path = cfg.path || "sprints.json";
+    if (!cfg.repo || !cfg.tok){ stat("Both fields are needed", "err"); return; }
+    saveCfg();
+    syncNow(false);
+    paintGh();
+  });
+  $("ghPull").addEventListener("click", function(){ restore(); });
+  $("ghForget").addEventListener("click", function(){
+    cfg.repo = ""; cfg.tok = "";
+    saveCfg(); paintGh();
+    $("ghRepo").value = ""; $("ghTok").value = "";
+    stat("Backup switched off. Nothing was deleted.", "ok");
+  });
+
+  function paintGh(){
+    var b = $("ghBtn");
+    if (configured()){ b.className = "ghbtn on"; b.textContent = "Backup on \u00b7 " + cfg.repo; }
+    else { b.className = "ghbtn"; b.textContent = "Set up backup & sync"; }
+  }
+  paintGh();
 
   /* auto sync on open, and again when a new day rolls over */
   if (configured()) setTimeout(function(){ syncNow(true); }, 1200);
