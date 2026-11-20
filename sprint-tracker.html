@@ -510,7 +510,7 @@
     </div>
 
     <div class="prog">
-      <div class="head"><span>Written today</span><span class="goal"><b id="doneMin">0</b> / <span id="goalMin">&ndash;</span> min</span></div>
+      <div class="head"><span>Written today</span><span class="goal"><b id="doneMin">0</b> / <span id="goalMin">&ndash;</span></span></div>
       <div class="bar"><div id="barFill" style="width:0%"></div></div>
       <div class="finish" id="finish"></div>
     </div>
@@ -526,7 +526,7 @@
         <span class="wkrange" id="wkRange">&mdash;</span>
       </div>
       <div class="wkfig">
-        <b id="wkMin">0</b><span class="wkgoal"> / <span id="wkGoal">1400</span> min</span>
+        <b id="wkMin">0</b><span class="wkgoal"> / <span id="wkGoal">1400</span></span>
       </div>
       <div class="bar"><div id="wkBar" style="width:0%"></div></div>
       <div class="wkdays" id="wkDays"></div>
@@ -551,7 +551,7 @@
     </div>
     <div class="dayaxis" id="hDays"></div>
     <div class="wmpick" id="hPick">Tap a bar to see that day</div>
-    <div class="goalline">Full bar = <span id="goalMin2">&ndash;</span> min</div>
+    <div class="goalline">Full bar = <span id="goalMin2">&ndash;</span></div>
 
     <div class="legend">
       <span><i style="background:linear-gradient(180deg,#F0C674,#C2185B)"></i>Goal met</span>
@@ -976,8 +976,8 @@
     $("wkRange").textContent =
       MS[w.start.getMonth()] + " " + w.start.getDate() + " \u2013 " + MS[end.getMonth()] + " " + end.getDate();
 
-    $("wkMin").textContent = w.min;
-    $("wkGoal").textContent = WEEK_GOAL;
+    $("wkMin").textContent = hm(w.min);
+    $("wkGoal").textContent = hm(WEEK_GOAL);
     $("wkBar").style.width = Math.min(100, (w.min / WEEK_GOAL) * 100) + "%";
 
     var DL = ["M","T","W","T","F","S","S"], html = "";
@@ -998,7 +998,7 @@
     } else {
       st.className = "wkstat";
       var daysLeft = Math.ceil(togo / GOAL);
-      st.innerHTML = "<b>" + togo + " min</b> to go \u00b7 about <b>" + daysLeft +
+      st.innerHTML = "<b>" + hm(togo) + "</b> to go \u00b7 about <b>" + daysLeft +
                      "</b> more full day" + (daysLeft === 1 ? "" : "s");
     }
   }
@@ -1048,7 +1048,7 @@
       el.className = "wmpick"; el.textContent = when + " \u00b7 ad day";
     } else if (mins > 0){
       el.className = "wmpick";
-      el.textContent = when + " \u00b7 " + mins + " min" +
+      el.textContent = when + " \u00b7 " + hm(mins) +
         (words > 0 ? " \u00b7 " + words.toLocaleString() + " words \u00b7 " +
                      Math.round(words/(mins/60)).toLocaleString() + "/hr" : "");
     } else {
@@ -1084,14 +1084,14 @@
         var lbl = h.type === "ads" ? "Ad day" : (mn >= GOAL ? "Goal met" : "Partial");
         listHtml += '<div class="row"><span class="t">' + MON[m].slice(0,3) + ' ' + i + '</span>' +
                     '<span class="n">' + lbl + '</span>' +
-                    '<span class="d">' + (h.type === "ads" ? "\u2014" : mn + "m") + '</span></div>';
+                    '<span class="d">' + (h.type === "ads" ? "\u2014" : hm(mn)) + '</span></div>';
       }
     }
     $("chart").innerHTML = html;
 
     /* scale, so bar heights are readable as minutes */
-    $("hMax").textContent = hTop;
-    $("hMid").textContent = Math.round(hTop/2);
+    $("hMax").textContent = hm(hTop);
+    $("hMid").textContent = hm(Math.round(hTop/2));
     $("hDays").innerHTML = dayAxis(nd);
 
     [].forEach.call($("chart").querySelectorAll("[data-hk]"), function(el){
@@ -1124,6 +1124,12 @@
     return h + ":" + (m < 10 ? "0" : "") + m;
   }
 
+  function hm(m){
+    m = Math.round(m);
+    if (m < 60) return m + "m";
+    var h = Math.floor(m / 60), r = m % 60;
+    return r === 0 ? h + "h" : h + "h " + r + "m";
+  }
   function goalPhrase(){
     var h = Math.floor(GOAL / 60), m = GOAL % 60;
     if (m === 0) return h + (h === 1 ? " hour" : " hours");
@@ -1136,9 +1142,9 @@
   }
 
   var goalLabel = document.getElementById("goalMin");
-  if (goalLabel) goalLabel.textContent = GOAL;
+  if (goalLabel) goalLabel.textContent = hm(GOAL);
   var goalLabel2 = document.getElementById("goalMin2");
-  if (goalLabel2) goalLabel2.textContent = GOAL;
+  if (goalLabel2) goalLabel2.textContent = hm(GOAL);
   var logPh = document.getElementById("logMins");
   if (logPh) logPh.placeholder = GOAL;
 
@@ -1175,7 +1181,7 @@
     } else if (past || (goalHit && !PLAN[Q.i].work && !PLAN[Q.i].optional)){
       hero.className = "hero rest";
       $("heroLabel").textContent = "Finished";
-      $("heroName").textContent = dm + " minutes written";
+      $("heroName").textContent = hm(dm) + " written";
       $("count").textContent = "\u2713"; $("count").className = "count";
       $("until").textContent = "Go home. The rest of the day is yours.";
       $("mainBtn").textContent = "Start another block";
@@ -1190,7 +1196,7 @@
       $("count").textContent = ctxt;
       $("count").className = "count" + (left < 0 ? " over" : "") + (ctxt.length >= 7 ? " long" : "");
       $("until").textContent = Q.paused !== null ? "Paused"
-        : (left < 0 ? "Over by " + Math.floor(-left / 60000) + " min. Still counting."
+        : (left < 0 ? "Over by " + hm(Math.floor(-left / 60000)) + ". Still counting."
                     : "Until " + fmtClock(new Date(Date.now() + left)));
       var nxt = PLAN[Q.i + 1];
       $("mainBtn").textContent = (Q.i === PLAN.length - 1) ? "Finish"
@@ -1202,7 +1208,7 @@
 
     $("backBtn").disabled = (undoStack.length === 0);
 
-    $("doneMin").textContent = dm;
+    $("doneMin").textContent = hm(dm);
     $("barFill").style.width = Math.min(100, (dm / GOAL) * 100) + "%";
     renderFlower(dm / GOAL);
 
@@ -1210,7 +1216,7 @@
     $("finish").innerHTML = Q.adDay ? ""
       : !started ? ""
       : togo === 0 ? goalPhrase() + " done. <b>Anything more is a bonus.</b>"
-      : "<b>" + togo + " min</b> to go, finishing around <b>" + fmtClock(pj.end) + "</b>";
+      : "<b>" + hm(togo) + "</b> to go, finishing around <b>" + fmtClock(pj.end) + "</b>";
 
     var html = "", k;
     for (k = 0; k < PLAN.length; k++){
