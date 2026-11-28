@@ -187,7 +187,10 @@
     margin:14px 0 4px;padding:13px 15px;border-radius:14px;
     background:rgba(77,208,177,.07);border:1px solid rgba(77,208,177,.26);
   }
+  .tally{cursor:pointer;}
+  .tally:active{background:rgba(77,208,177,.14);}
   .tally .tl{font-size:13px;color:var(--mute);letter-spacing:.3px;}
+  .tally .tl em{font-style:normal;display:block;font-size:11px;color:var(--teal);margin-top:3px;letter-spacing:.4px;}
   .tally .tv{font-size:26px;font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums;}
   .tally .tv span{font-size:13px;font-weight:600;color:#8E7C78;margin-left:5px;}
   .tallysub{font-size:11.5px;color:#8E7C78;text-align:center;margin:0 0 6px;}
@@ -543,8 +546,8 @@
     <h2>Today</h2>
     <div id="list"></div>
 
-    <div class="tally">
-      <span class="tl">Words today</span>
+    <div class="tally" id="tallyBox" role="button" tabindex="0">
+      <span class="tl">Words today <em>other days ›</em></span>
       <span class="tv" id="tallyVal">0<span id="tallyRate"></span></span>
     </div>
     <p class="tallysub" id="tallySub">Tap a sprint to put its word count in.</p>
@@ -595,6 +598,7 @@
     <h2 style="margin-top:22px">Backup</h2>
     <button class="adbtn" id="expBtn">Save a backup</button>
     <button class="adbtn quiet" id="impBtn">Restore from a backup file</button>
+    <button class="adbtn quiet" id="csvBtn">Save a spreadsheet of every sprint</button>
     <input type="file" id="impFile" accept=".json,application/json" hidden>
     <div class="syncstat" id="bkStat"></div>
 
@@ -1823,7 +1827,7 @@
     $("tallyRate").textContent = rate > 0 ? "· " + rate.toLocaleString() + "/hr" : "";
     $("tallySub").textContent = logged
       ? logged + " sprint" + (logged === 1 ? "" : "s") + " logged. Tap any number to change it."
-      : "Tap Track on a sprint to put its word count in.";
+      : "Tap Track on a sprint to put its word count in. Tap the box above for other days.";
   }
 
   $("tkSave").addEventListener("click", saveTrack);
@@ -1835,6 +1839,17 @@
   });
   $("trackModal").addEventListener("click", function(e){
     if (e.target === $("trackModal")) closeTrack();
+  });
+
+  /* The Words tab is where any day can be opened and edited. Give the Today
+     page a door into it so she is not stuck on today. */
+  function openWordsOn(key){
+    showTab("tabWords");
+    if (key){ wView = key; renderWords(); }
+  }
+  $("tallyBox").addEventListener("click", function(){ openWordsOn(dayKey()); });
+  $("tallyBox").addEventListener("keydown", function(e){
+    if (e.key === "Enter" || e.key === " "){ e.preventDefault(); openWordsOn(dayKey()); }
   });
 
   var TABS = [["tabToday","viewToday",null],
@@ -2224,6 +2239,9 @@
   }
 
   function paintBackupAge(){
+    /* render() repaints this every second while History is open. Don't wipe a
+       message she has only just been shown. */
+    if (Date.now() < bkHold) return;
     var b = $("expBtn"), n = daysSinceBackup();
     var logged = Object.keys(S.history).length + Object.keys(S.words).length;
     if (logged === 0){ b.textContent = "Save a backup"; b.className = "adbtn"; return; }
@@ -2242,10 +2260,12 @@
     }
   }
 
-  function bkStat(msg, kind){
+  var bkHold = 0;
+  function bkStat(msg, kind, hold){
     var el = $("bkStat");
     el.textContent = msg || "";
     el.className = "syncstat" + (kind ? " " + kind : "");
+    if (hold) bkHold = Date.now() + 12000;   /* let her actually read the result */
   }
 
   $("expBtn").addEventListener("click", function(){
@@ -2266,9 +2286,56 @@
       var days = Object.keys(S.history).length;
       try { if (window.localStorage) window.localStorage.setItem("sprints:lastbackup", dayKey()); } catch(e){}
       paintBackupAge();
-      bkStat("Saved " + days + " day" + (days===1?"":"s") + " to your files.", "ok");
+      bkStat("Saved " + days + " day" + (days===1?"":"s") + " to your files.", "ok", true);
     } catch(e){
-      bkStat("Could not save the file.", "err");
+      bkStat("Could not save the file.", "err", true);
+    }
+  });
+
+  /* A spreadsheet of every sprint ever logged: one row per sprint, so it can be
+     opened in Excel, sorted, totalled or emailed as it is. */
+  $("csvBtn").addEventListener("click", function(){
+    try {
+      var DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+      function cell(v){
+        v = (v === null || v === undefined) ? "" : String(v);
+        return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+      }
+      var rows = [["Date","Day","Sprint","Minutes","Words","Words per hour"]];
+      var keys = Object.keys(S.words || {}).sort();
+      var grandWords = 0, grandMins = 0, sprints = 0;
+
+      keys.forEach(function(k){
+        var list = (S.words[k] || []).slice().sort(function(a, b){
+          return (a.n || 0) - (b.n || 0);
+        });
+        var dayName = DAYS[new Date(k + "T12:00:00").getDay()];
+        list.forEach(function(r){
+          var mn = sessionMins(r), wd = r.words || 0;
+          grandWords += wd; grandMins += mn; sprints++;
+          rows.push([k, dayName, (r.n || ""), mn, wd, mn > 0 ? Math.round(wd / (mn / 60)) : ""]);
+        });
+      });
+
+      if (sprints === 0){ bkStat("Nothing logged yet, so there is no spreadsheet to save.", "err", true); return; }
+
+      rows.push([]);
+      rows.push(["TOTAL", "", sprints + " sprints", grandMins, grandWords,
+                 grandMins > 0 ? Math.round(grandWords / (grandMins / 60)) : ""]);
+
+      var csv = rows.map(function(r){ return r.map(cell).join(","); }).join("\r\n");
+      /* the BOM is what makes Excel read the file as UTF-8 */
+      var blob = new Blob(["﻿" + csv], { type:"text/csv;charset=utf-8" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "sprints-" + dayKey() + ".csv";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      bkStat("Saved " + sprints + " sprint" + (sprints === 1 ? "" : "s") +
+             " across " + keys.length + " day" + (keys.length === 1 ? "" : "s") + ". Opens in Excel.", "ok", true);
+    } catch(e){
+      bkStat("Could not save the spreadsheet.", "err", true);
     }
   });
 
@@ -2282,7 +2349,7 @@
       var o = null;
       try { o = JSON.parse(rd.result); } catch(e){}
       if (!o || (!o.history && !o.words)){
-        bkStat("That file is not a sprints backup.", "err");
+        bkStat("That file is not a sprints backup.", "err", true);
         $("impFile").value = "";
         return;
       }
@@ -2292,10 +2359,10 @@
       save();
       renderHistory();
       var gained = Object.keys(S.history).length - beforeH;
-      bkStat("Restored. " + (gained > 0 ? gained + " day" + (gained===1?"":"s") + " added." : "Everything was already here."), "ok");
+      bkStat("Restored. " + (gained > 0 ? gained + " day" + (gained===1?"":"s") + " added." : "Everything was already here."), "ok", true);
       $("impFile").value = "";
     };
-    rd.onerror = function(){ bkStat("Could not read that file.", "err"); };
+    rd.onerror = function(){ bkStat("Could not read that file.", "err", true); };
     rd.readAsText(f);
   });
 
