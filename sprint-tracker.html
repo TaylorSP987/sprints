@@ -16,6 +16,7 @@
     --violet:#8B44B8; --teal:#4DD0B1; --cream:#F7EDE6; --mute:#A08C88;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  [hidden]{display:none !important;}
   body{
     background:var(--ink); color:var(--cream);
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
@@ -187,10 +188,7 @@
     margin:14px 0 4px;padding:13px 15px;border-radius:14px;
     background:rgba(77,208,177,.07);border:1px solid rgba(77,208,177,.26);
   }
-  .tally{cursor:pointer;}
-  .tally:active{background:rgba(77,208,177,.14);}
   .tally .tl{font-size:13px;color:var(--mute);letter-spacing:.3px;}
-  .tally .tl em{font-style:normal;display:block;font-size:11px;color:var(--teal);margin-top:3px;letter-spacing:.4px;}
   .tally .tv{font-size:26px;font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums;}
   .tally .tv span{font-size:13px;font-weight:600;color:#8E7C78;margin-left:5px;}
   .tallysub{font-size:11.5px;color:#8E7C78;text-align:center;margin:0 0 6px;}
@@ -499,6 +497,19 @@
   </div>
 
   <div class="view on" id="viewToday">
+    <div class="mnav" id="tNav">
+      <button id="tPrev">&lsaquo;</button>
+      <span id="tDayLabel">Today</span>
+      <button id="tNext">&rsaquo;</button>
+    </div>
+
+    <div class="whero" id="pastHero" hidden>
+      <div class="whlabel" id="pastLabel">&mdash;</div>
+      <div class="whfig"><b id="pastWords">0</b></div>
+      <div class="whsub" id="pastSub">&mdash;</div>
+      <div class="bar"><div id="pastBar" style="width:0%"></div></div>
+    </div>
+
     <div class="hero" id="hero">
       <div class="clocktag" id="clock">&mdash;</div>
       <div class="label" id="heroLabel">Not started</div>
@@ -546,11 +557,11 @@
       </svg>
     </div>
 
-    <div class="ctrl">
+    <div class="ctrl" id="todayCtrl">
       <button class="go wide" id="mainBtn">Start now</button>
       <button id="pauseBtn" disabled>Pause</button>
     </div>
-    <div class="ctrl small">
+    <div class="ctrl small" id="todayCtrl2">
       <button id="backBtn" disabled>&larr; Back</button>
       <button id="skipBtn" disabled>Skip &rarr;</button>
       <button id="resetBtn">Reset</button>
@@ -558,16 +569,17 @@
     </div>
 
     <div class="prog">
-      <div class="head"><span>Written today</span><span class="goal"><b id="doneMin">0</b> / <span id="goalMin">&ndash;</span></span></div>
+      <div class="head"><span id="progHead">Written today</span><span class="goal"><b id="doneMin">0</b> / <span id="goalMin">&ndash;</span></span></div>
       <div class="bar"><div id="barFill" style="width:0%"></div></div>
       <div class="finish" id="finish"></div>
     </div>
 
-    <h2>Today</h2>
+    <h2 id="listHead">Today</h2>
     <div id="list"></div>
+    <button class="adbtn" id="pastAddBtn">Add a sprint I did off the timer</button>
 
-    <div class="tally" id="tallyBox" role="button" tabindex="0">
-      <span class="tl">Words today <em>other days ›</em></span>
+    <div class="tally" id="tallyBox">
+      <span class="tl">Words today</span>
       <span class="tv" id="tallyVal">0<span id="tallyRate"></span></span>
     </div>
     <p class="tallysub" id="tallySub">Tap a sprint to put its word count in.</p>
@@ -699,7 +711,7 @@
 
     <div class="field" style="margin-top:12px">
       <label for="wsWords">Words written</label>
-      <input type="number" id="wsWords" min="0" step="50" placeholder="1200" inputmode="numeric">
+      <input type="number" id="wsWords" min="0" step="50" placeholder="blank if you don't know" inputmode="numeric">
     </div>
 
     <div class="rateout" id="wsRate">&mdash;</div>
@@ -1266,6 +1278,20 @@
     autoRoll();
     $("clock").textContent = fmtClock(new Date());
 
+    /* The Today page can be stepped back through earlier days. When it is
+       showing one, the timer keeps running underneath: only the display
+       changes, and record()/save() still run before we bail out. */
+    renderDayNav();
+    if (tView && tView !== dayKey()){ renderPastDay(); record(); save(); return; }
+    $("pastHero").hidden = true;
+    $("hero").hidden = false;
+    $("todayCtrl").hidden = false;
+    $("todayCtrl2").hidden = false;
+    $("pastAddBtn").hidden = false;
+    $("pastAddBtn").textContent = "Add a sprint I did off the timer";
+    $("progHead").textContent = "Written today";
+    $("listHead").textContent = "Today";
+
     /* same reconciliation as History: if word sessions record more writing
        than the timer caught, show the larger number rather than under-report */
     var dm = Math.max(doneMinutes(), (typeof dayWordMins === "function") ? dayWordMins(dayKey()) : 0);
@@ -1342,9 +1368,9 @@
               : (bb.note || "");
       var tkBtn = "";
       if (bb.work && !Q.adDay && Q.absorbed.indexOf(k) < 0){
-        var wn = workNo(k), rec = sprintRec(wn);
-        tkBtn = '<button class="tk' + (rec ? ' has' : '') + '" data-w="' + wn + '" data-k="' + k + '">' +
-                (rec ? rec.words.toLocaleString() : 'Track') + '</button>';
+        var wn = workNo(k), rec = sprintRec(wn), got = rec && rec.words > 0;
+        tkBtn = '<button class="tk' + (got ? ' has' : '') + '" data-w="' + wn + '" data-k="' + k + '">' +
+                (got ? rec.words.toLocaleString() : 'Track') + '</button>';
       }
       html += '<div class="row ' + cls + '"><span class="t">' + tm + '</span>' +
               '<span class="n">' + bb.n + (sub ? '<em>' + sub + '</em>' : '') + '</span>' +
@@ -1736,7 +1762,8 @@
     var n    = parseInt($("wsWords").value, 10);
     if (!d){ wsMsg("Pick a date."); return; }
     if (isNaN(mins) || mins <= 0){ wsMsg("How many minutes was it?"); return; }
-    if (isNaN(n) || n < 0){ wsMsg("Enter the word count."); return; }
+    if ($("wsWords").value.trim() === "") n = 0;   /* time only is fine, the words can come later */
+    if (isNaN(n) || n < 0){ wsMsg("Word count cannot be negative. Leave it blank if you do not know it."); return; }
     if (isNaN(num) || num < 1) num = wDay(d).length + 1;
 
     if (!S.words[d]) S.words[d] = [];
@@ -1753,8 +1780,9 @@
     }
     S.words[d].sort(function(a,b){ return (a.n||0) - (b.n||0); });
     save(); renderWords();
-    wsMsg((wsEdit !== null ? "Updated \u00b7 " : "Saved \u00b7 ") +
-          Math.round(n/(mins/60)).toLocaleString() + " words/hour", true);
+    wsMsg((wsEdit !== null ? "Updated" : "Saved") +
+          (n > 0 ? " \u00b7 " + Math.round(n/(mins/60)).toLocaleString() + " words/hour"
+                 : " \u00b7 " + mins + " minutes counted, no words yet"), true);
     setTimeout(closeWords, 1000);
   }
 
@@ -1781,8 +1809,11 @@
      button instead meant a tap was lost whenever the per-second render had just
      rebuilt the row underneath her finger. */
   $("list").addEventListener("click", function(e){
-    var b = e.target.closest ? e.target.closest(".tk") : null;
-    if (!b) return;
+    if (!e.target.closest) return;
+    var past = e.target.closest("[data-pi]");
+    if (past && tView){ editPast(parseInt(past.getAttribute("data-pi"), 10)); return; }
+    var b = e.target.closest(".tk");
+    if (!b || !b.hasAttribute("data-w")) return;
     openTrack(parseInt(b.getAttribute("data-w"), 10), parseInt(b.getAttribute("data-k"), 10));
   });
 
@@ -1861,7 +1892,7 @@
     for (var i = 0; i < list.length; i++){
       total += (list[i].words || 0);
       m += sessionMins(list[i]);
-      logged++;
+      if ((list[i].words || 0) > 0) logged++;
     }
     var rate = m > 0 ? Math.round(total / (m / 60)) : 0;
     var sig = total + "|" + rate + "|" + logged;
@@ -1871,7 +1902,7 @@
     $("tallyRate").textContent = rate > 0 ? "· " + rate.toLocaleString() + "/hr" : "";
     $("tallySub").textContent = logged
       ? logged + " sprint" + (logged === 1 ? "" : "s") + " logged. Tap any number to change it."
-      : "Tap Track on a sprint to put its word count in. Tap the box above for other days.";
+      : "Tap Track on a sprint to put its word count in.";
   }
 
   $("tkSave").addEventListener("click", saveTrack);
@@ -1885,15 +1916,109 @@
     if (e.target === $("trackModal")) closeTrack();
   });
 
-  /* The Words tab is where any day can be opened and edited. Give the Today
-     page a door into it so she is not stuck on today. */
-  function openWordsOn(key){
-    showTab("tabWords");
-    if (key){ wView = key; renderWords(); }
+  /* ---- stepping the Today page back through earlier days ---- */
+
+  var tView = null;                      /* null means today */
+
+  function shiftKey(key, days){
+    var p = key.split("-");
+    var d = new Date(+p[0], +p[1] - 1, +p[2]);
+    d.setDate(d.getDate() + days);
+    return dayKey(d);
   }
-  $("tallyBox").addEventListener("click", function(){ openWordsOn(dayKey()); });
-  $("tallyBox").addEventListener("keydown", function(e){
-    if (e.key === "Enter" || e.key === " "){ e.preventDefault(); openWordsOn(dayKey()); }
+  function prettyDay(key){
+    if (key === dayKey()) return "Today";
+    if (key === shiftKey(dayKey(), -1)) return "Yesterday";
+    var p = key.split("-"), d = new Date(+p[0], +p[1] - 1, +p[2]);
+    var DW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    var MS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return DW[d.getDay()] + " " + d.getDate() + " " + MS[d.getMonth()];
+  }
+
+  function dayPhrase(key){            /* reads right in a sentence */
+    var p = prettyDay(key);
+    return (p === "Today" || p === "Yesterday") ? p.toLowerCase() : "on " + p;
+  }
+
+  function renderDayNav(){
+    var k = tView || dayKey();
+    $("tDayLabel").textContent = prettyDay(k);
+    $("tNext").disabled = (k === dayKey());
+  }
+
+  function renderPastDay(){
+    var k = tView;
+    var list = (S.words[k] || []).slice().sort(function(a, b){ return (a.n || 0) - (b.n || 0); });
+
+    $("hero").hidden = true;
+    $("todayCtrl").hidden = true;
+    $("todayCtrl2").hidden = true;
+    $("pastHero").hidden = false;
+    $("pastAddBtn").hidden = false;
+    $("pastAddBtn").textContent = "Add a sprint to this day";
+
+    var words = 0, wmins = 0;
+    list.forEach(function(r){ words += (r.words || 0); wmins += sessionMins(r); });
+    var dmins = Math.max(effMins(k), wmins);
+
+    $("pastLabel").textContent = prettyDay(k) + " · " + k;
+    $("pastWords").textContent = words.toLocaleString();
+    $("pastSub").textContent = list.length
+      ? hm(dmins) + " written · " + list.length + " sprint" + (list.length === 1 ? "" : "s") +
+        (wmins > 0 ? " · " + Math.round(words / (wmins / 60)).toLocaleString() + " words an hour" : "")
+      : (dmins > 0 ? hm(dmins) + " written, no word counts logged" : "Nothing logged for this day");
+    $("pastBar").style.width = Math.min(100, (dmins / GOAL) * 100) + "%";
+
+    $("progHead").textContent = "Written " + dayPhrase(k);
+    $("doneMin").textContent = hm(dmins);
+    $("barFill").style.width = Math.min(100, (dmins / GOAL) * 100) + "%";
+    $("finish").textContent = dmins >= GOAL ? "Goal met." : hm(Math.max(0, GOAL - dmins)) + " short of the goal.";
+    $("listHead").textContent = "Sprints";
+
+    var html = "";
+    list.forEach(function(r, i){
+      html += '<div class="row work" data-pi="' + i + '">' +
+              '<span class="t">#' + (r.n || (i + 1)) + '</span>' +
+              '<span class="n">Sprint ' + (r.n || (i + 1)) + '<em>tap to edit</em></span>' +
+              '<button class="tk has" data-pi="' + i + '">' + (r.words || 0).toLocaleString() + '</button>' +
+              '<span class="d">' + sessionMins(r) + 'm</span></div>';
+    });
+    if (!html) html = '<p class="empty">No sprints logged for this day.<br>Tap the button below to add one.</p>';
+    if (html !== lastListHtml){ lastListHtml = html; $("list").innerHTML = html; }
+
+    var sig = "past|" + words + "|" + list.length;
+    if (sig !== lastTallySig){
+      lastTallySig = sig;
+      $("tallyVal").firstChild.nodeValue = words.toLocaleString();
+      $("tallyRate").textContent = wmins > 0 ? "· " + Math.round(words / (wmins / 60)).toLocaleString() + "/hr" : "";
+      $("tallySub").textContent = "Words " + dayPhrase(k) + ". Tap a sprint to change it.";
+    }
+  }
+
+  function stepDay(n){
+    var k = shiftKey(tView || dayKey(), n);
+    if (k > dayKey()) return;                 /* no travelling into tomorrow */
+    tView = (k === dayKey()) ? null : k;
+    lastListHtml = null; lastTallySig = null; /* force a redraw */
+    render();
+  }
+  $("tPrev").addEventListener("click", function(){ stepDay(-1); });
+  $("tNext").addEventListener("click", function(){ stepDay(1); });
+  $("tDayLabel").addEventListener("click", function(){
+    if (tView){ tView = null; lastListHtml = null; lastTallySig = null; render(); }
+  });
+
+  /* editing a past sprint reuses the session editor, which can change the
+     minutes as well as the words */
+  function editPast(i){
+    wView = tView;
+    openWords(i);
+  }
+  $("pastAddBtn").addEventListener("click", function(){
+    wView = tView || dayKey();
+    openWords();
+    /* default the length to a sprint, so she only types the number she did */
+    if (!$("wsMins").value) $("wsMins").value = PLAN[0].m;
   });
 
   var TABS = [["tabToday","viewToday",null],
