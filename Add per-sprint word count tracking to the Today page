@@ -164,8 +164,33 @@
   .row.work .t{color:var(--rose);}
   .row .n{flex:1;font-size:16px;}
   .row .n em{font-style:normal;display:block;font-size:11.5px;color:#8E7C78;margin-top:2px;}
-  .row .d{font-size:13px;color:#8E7C78;font-variant-numeric:tabular-nums;}
+  .row .d{font-size:13px;color:#8E7C78;font-variant-numeric:tabular-nums;width:38px;text-align:right;}
   .row.done{opacity:.38;} .row.done .n{text-decoration:line-through;}
+
+  /* word count for one sprint, tap to add or change */
+  .row .tk{
+    flex:none;font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.4px;
+    padding:5px 9px;border-radius:8px;cursor:pointer;font-variant-numeric:tabular-nums;
+    border:1px solid var(--line);background:rgba(244,166,184,.07);color:#9A8782;
+    min-width:58px;text-align:center;
+  }
+  .row .tk.has{
+    background:rgba(77,208,177,.13);border-color:rgba(77,208,177,.42);
+    color:var(--teal);font-size:13px;
+  }
+  .row .tk:active{background:rgba(244,166,184,.22);}
+  .row.done .tk{opacity:1;}
+
+  /* running total for the day, under the sprint list */
+  .tally{
+    display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+    margin:14px 0 4px;padding:13px 15px;border-radius:14px;
+    background:rgba(77,208,177,.07);border:1px solid rgba(77,208,177,.26);
+  }
+  .tally .tl{font-size:13px;color:var(--mute);letter-spacing:.3px;}
+  .tally .tv{font-size:26px;font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums;}
+  .tally .tv span{font-size:13px;font-weight:600;color:#8E7C78;margin-left:5px;}
+  .tallysub{font-size:11.5px;color:#8E7C78;text-align:center;margin:0 0 6px;}
 
   .ctrl.small button{padding:8px 4px;font-size:9.5px;letter-spacing:1px;}
   .adbtn-inline{
@@ -517,6 +542,12 @@
 
     <h2>Today</h2>
     <div id="list"></div>
+
+    <div class="tally">
+      <span class="tl">Words today</span>
+      <span class="tv" id="tallyVal">0<span id="tallyRate"></span></span>
+    </div>
+    <p class="tallysub" id="tallySub">Tap a sprint to put its word count in.</p>
   </div>
 
   <div class="view" id="viewHist">
@@ -643,6 +674,29 @@
     </div>
     <div class="ctrl small">
       <button id="wsDelete" hidden>Delete this session</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="trackModal" hidden>
+  <div class="sheet">
+    <div class="sheettitle" id="tkTitle">Sprint 1</div>
+    <p class="sheetsub" id="tkSub">How many words did you write?</p>
+
+    <div class="field">
+      <label for="tkWords">Words written</label>
+      <input type="number" id="tkWords" min="0" step="10" placeholder="1200" inputmode="numeric">
+    </div>
+
+    <div class="rateout" id="tkRate">&mdash;</div>
+    <div class="sheetmsg" id="tkMsg"></div>
+
+    <div class="ctrl">
+      <button class="go wide" id="tkSave">Save</button>
+      <button id="tkCancel">Cancel</button>
+    </div>
+    <div class="ctrl small">
+      <button id="tkDelete" hidden>Clear this count</button>
     </div>
   </div>
 </div>
@@ -888,6 +942,7 @@
       S.session = freshSession(); Q = S.session; Q.blockStart = Date.now(); render(); return;
     }
     var act = elapsedMin(), over = 0;
+    var justDone = PLAN[Q.i].work ? Q.i : null;    /* ask for its word count after */
     if (PLAN[Q.i].work){ Q.actual[Q.i] = act; over = act - mins(Q.i); }
 
     var j = Q.i + 1;
@@ -900,6 +955,13 @@
     }
     Q.i = j; Q.blockStart = Date.now(); Q.pausedMs = 0; Q.paused = null;
     render();
+
+    /* a writing sprint just ended: ask for the count while it is fresh,
+       unless one is already in for that sprint */
+    if (justDone !== null && !Q.adDay){
+      var wn = workNo(justDone);
+      if (!sprintRec(wn)) setTimeout(function(){ openTrack(wn, justDone); }, 400);
+    }
   }
 
   function record(){
@@ -1227,11 +1289,24 @@
       var sub = ab ? (bb.work ? "covered by a long stretch" : "skipped, kept writing")
               : (Q.actual[k] != null && Q.actual[k] !== bb.m) ? (Q.actual[k] + " min actual")
               : (bb.note || "");
+      var tkBtn = "";
+      if (bb.work && !Q.adDay && Q.absorbed.indexOf(k) < 0){
+        var wn = workNo(k), rec = sprintRec(wn);
+        tkBtn = '<button class="tk' + (rec ? ' has' : '') + '" data-w="' + wn + '" data-k="' + k + '">' +
+                (rec ? rec.words.toLocaleString() : 'Track') + '</button>';
+      }
       html += '<div class="row ' + cls + '"><span class="t">' + tm + '</span>' +
               '<span class="n">' + bb.n + (sub ? '<em>' + sub + '</em>' : '') + '</span>' +
+              tkBtn +
               '<span class="d">' + mins(k) + 'm</span></div>';
     }
     $("list").innerHTML = html;
+    [].forEach.call($("list").querySelectorAll(".tk"), function(b){
+      b.addEventListener("click", function(){
+        openTrack(parseInt(b.getAttribute("data-w"), 10), parseInt(b.getAttribute("data-k"), 10));
+      });
+    });
+    renderTally();
 
     if (started && !Q.adDay && Q.i < PLAN.length && Q.paused === null){
       var cur = PLAN[Q.i], overBy = elapsedMs() - mins(Q.i) * 60000;
@@ -1646,6 +1721,108 @@
   });
   $("wordModal").addEventListener("click", function(e){
     if (e.target === $("wordModal")) closeWords();
+  });
+
+  /* ---- word count straight off the Today page, one sprint at a time ---- */
+  /* These write into the same S.words store the Words tab reads, so a count
+     put in here shows up there, in the charts and in the backups. */
+
+  var tkW = null, tkK = null;
+
+  function workNo(k){                       /* which writing sprint this block is */
+    var n = 0;
+    for (var i = 0; i <= k; i++) if (PLAN[i].work) n++;
+    return n;
+  }
+  function sprintRec(wn){                   /* today's saved count for that sprint */
+    var list = S.words[dayKey()] || [];
+    for (var i = 0; i < list.length; i++) if ((list[i].n | 0) === wn) return list[i];
+    return null;
+  }
+  function sprintMins(k){                   /* what she actually sat for, if known */
+    return (Q.actual[k] != null) ? Q.actual[k] : mins(k);
+  }
+
+  function tkMsg(t, ok){
+    var m = $("tkMsg");
+    m.textContent = t || "";
+    m.className = "sheetmsg" + (ok ? " ok" : "");
+  }
+  function tkRate(){
+    var n = parseInt($("tkWords").value, 10), m = tkK === null ? 0 : sprintMins(tkK);
+    $("tkRate").innerHTML = (!isNaN(n) && n >= 0 && m > 0)
+      ? "<b>" + Math.round(n / (m / 60)).toLocaleString() + "</b> words per hour"
+      : "&mdash;";
+  }
+
+  function openTrack(wn, k){
+    tkW = wn; tkK = k;
+    var rec = sprintRec(wn);
+    $("tkTitle").textContent = (PLAN[k] && PLAN[k].n) ? PLAN[k].n : ("Sprint " + wn);
+    $("tkSub").textContent = (rec ? "Change the word count for this sprint." :
+                                    "How many words did you write?") +
+                             " " + sprintMins(k) + " minutes.";
+    $("tkWords").value = rec ? rec.words : "";
+    $("tkDelete").hidden = !rec;
+    tkMsg(""); tkRate();
+    $("trackModal").hidden = false;
+    setTimeout(function(){ try { $("tkWords").focus(); $("tkWords").select(); } catch(e){} }, 60);
+  }
+  function closeTrack(){ $("trackModal").hidden = true; }
+
+  function saveTrack(){
+    var n = parseInt($("tkWords").value, 10);
+    if (isNaN(n) || n < 0){ tkMsg("Enter the word count."); return; }
+    var d = dayKey(), m = sprintMins(tkK);
+    if (!S.words[d]) S.words[d] = [];
+    var rec = sprintRec(tkW);
+    if (rec){ rec.words = n; rec.mins = m; }
+    else S.words[d].push({ n: tkW, mins: m, words: n });
+    S.words[d].sort(function(a, b){ return (a.n || 0) - (b.n || 0); });
+    save();
+    render();
+    if ($("viewWords").className.indexOf("on") > -1) renderWords();
+    tkMsg("Saved", true);
+    setTimeout(closeTrack, 650);
+  }
+
+  function clearTrack(){
+    var d = dayKey(), list = S.words[d] || [];
+    for (var i = 0; i < list.length; i++){
+      if ((list[i].n | 0) === tkW){ list.splice(i, 1); break; }
+    }
+    if (list.length) S.words[d] = list; else delete S.words[d];
+    save();
+    render();
+    if ($("viewWords").className.indexOf("on") > -1) renderWords();
+    closeTrack();
+  }
+
+  function renderTally(){
+    var list = S.words[dayKey()] || [];
+    var total = 0, m = 0, logged = 0;
+    for (var i = 0; i < list.length; i++){
+      total += (list[i].words || 0);
+      m += sessionMins(list[i]);
+      logged++;
+    }
+    $("tallyVal").firstChild.nodeValue = total.toLocaleString();
+    var rate = m > 0 ? Math.round(total / (m / 60)) : 0;
+    $("tallyRate").textContent = rate > 0 ? "· " + rate.toLocaleString() + "/hr" : "";
+    $("tallySub").textContent = logged
+      ? logged + " sprint" + (logged === 1 ? "" : "s") + " logged. Tap any number to change it."
+      : "Tap Track on a sprint to put its word count in.";
+  }
+
+  $("tkSave").addEventListener("click", saveTrack);
+  $("tkCancel").addEventListener("click", closeTrack);
+  $("tkDelete").addEventListener("click", clearTrack);
+  $("tkWords").addEventListener("input", function(){ tkMsg(""); tkRate(); });
+  $("tkWords").addEventListener("keydown", function(e){
+    if (e.key === "Enter"){ e.preventDefault(); saveTrack(); }
+  });
+  $("trackModal").addEventListener("click", function(e){
+    if (e.target === $("trackModal")) closeTrack();
   });
 
   var TABS = [["tabToday","viewToday",null],
