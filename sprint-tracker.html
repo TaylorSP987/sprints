@@ -2492,36 +2492,43 @@
 
   function buildCsv(){
     var want = $("csvMonth").value || "all";
-    var DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
     function cell(v){
       v = (v === null || v === undefined) ? "" : String(v);
       return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
     }
-    var rows = [["Date","Day","Sprint","Minutes","Words","Words per hour"]];
+    var title = want === "all" ? "All time" : $("csvMonth").selectedOptions[0].textContent;
+    var today = new Date();
+    var rows = [
+      ["Taylor Spratt \u2014 writing sprint log"],
+      [title],
+      ["Exported " + dayKey(today)],
+      [],
+      ["Date","Sprint","Minutes","Words","Words per hour"]
+    ];
     var keys = Object.keys(S.words || {}).sort().filter(function(k){
       return want === "all" || k.slice(0, 7) === want;
     });
     var gw = 0, gm = 0, sprints = 0;
     keys.forEach(function(k){
       var list = (S.words[k] || []).slice().sort(function(a, b){ return (a.n || 0) - (b.n || 0); });
-      var dayName = DAYS[new Date(k + "T12:00:00").getDay()];
-      list.forEach(function(r){
+      /* number the sprints 1, 2, 3 within each day, whatever is stored */
+      list.forEach(function(r, i){
         var mn = sessionMins(r), wd = r.words || 0;
         gw += wd; gm += mn; sprints++;
-        rows.push([k, dayName, (r.n || ""), mn, wd, mn > 0 ? Math.round(wd / (mn / 60)) : ""]);
+        rows.push([k, i + 1, mn, wd, mn > 0 ? Math.round(wd / (mn / 60)) : ""]);
       });
     });
     if (sprints === 0) return null;
     rows.push([]);
-    rows.push(["TOTAL", "", sprints + (sprints === 1 ? " sprint" : " sprints"), gm, gw, gm > 0 ? Math.round(gw / (gm / 60)) : ""]);
+    rows.push(["TOTAL", sprints + (sprints === 1 ? " sprint" : " sprints"), gm, gw,
+               gm > 0 ? Math.round(gw / (gm / 60)) : ""]);
     var csv = rows.map(function(r){ return r.map(cell).join(","); }).join("\r\n");
-    var label = want === "all" ? "all" : want;
     return {
       /* the BOM is what makes Excel read it as UTF-8 */
       blob: new Blob(["\ufeff" + csv], { type:"text/csv;charset=utf-8" }),
-      name: "sprints-" + label + ".csv",
+      name: "sprints-" + (want === "all" ? "all" : want) + ".csv",
       sprints: sprints, days: keys.length,
-      title: want === "all" ? "every sprint" : $("csvMonth").selectedOptions[0].textContent
+      title: want === "all" ? "every sprint" : title
     };
   }
 
