@@ -685,7 +685,7 @@
 
     <div class="field">
       <label for="tkWords">Words written</label>
-      <input type="number" id="tkWords" min="0" step="10" placeholder="1200" inputmode="numeric">
+      <input type="number" id="tkWords" min="0" step="10" inputmode="numeric">
     </div>
 
     <div class="rateout" id="tkRate">&mdash;</div>
@@ -739,15 +739,15 @@
   "use strict";
 
   var PLAN = [
-    {n:"Sprint 1", m:90, work:true},
+    {n:"Sprint 1", m:50, work:true},
     {n:"Break",    m:15},
-    {n:"Sprint 2", m:90, work:true},
+    {n:"Sprint 2", m:50, work:true},
     {n:"Lunch",    m:30},
-    {n:"Sprint 3", m:60, work:true},
+    {n:"Sprint 3", m:50, work:true},
     {n:"Break",    m:15},
     {n:"Sprint 4", m:50, work:true}
   ];
-  var GOAL = 290;
+  var GOAL = 200;   /* 4 sprints x 50 minutes */
   /* Do not change this. Everything you have logged is stored under it.
      rescueOldData() below can recover from a rename, but keeping this
      stable is what guarantees your data survives every update. */
@@ -758,8 +758,11 @@
              "July","August","September","October","November","December"];
 
   var MEM = {};
+  var lastSaved = null;
   function save(){
     var str = JSON.stringify(S);
+    if (str === lastSaved) return;   /* render() calls this every second; don't rewrite storage for nothing */
+    lastSaved = str;
     try { if (window.localStorage) { window.localStorage.setItem(KEY, str); return; } } catch(e){}
     MEM[KEY] = str;
   }
@@ -1300,12 +1303,9 @@
               tkBtn +
               '<span class="d">' + mins(k) + 'm</span></div>';
     }
-    $("list").innerHTML = html;
-    [].forEach.call($("list").querySelectorAll(".tk"), function(b){
-      b.addEventListener("click", function(){
-        openTrack(parseInt(b.getAttribute("data-w"), 10), parseInt(b.getAttribute("data-k"), 10));
-      });
-    });
+    /* render() runs every second. Only touch the DOM when something actually
+       changed, otherwise a tap can land on a button that was just replaced. */
+    if (html !== lastListHtml){ lastListHtml = html; $("list").innerHTML = html; }
     renderTally();
 
     if (started && !Q.adDay && Q.i < PLAN.length && Q.paused === null){
@@ -1727,7 +1727,16 @@
   /* These write into the same S.words store the Words tab reads, so a count
      put in here shows up there, in the charts and in the backups. */
 
-  var tkW = null, tkK = null;
+  var tkW = null, tkK = null, lastListHtml = null, lastTallySig = null;
+
+  /* One listener on the list itself, which is never replaced. Binding to each
+     button instead meant a tap was lost whenever the per-second render had just
+     rebuilt the row underneath her finger. */
+  $("list").addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest(".tk") : null;
+    if (!b) return;
+    openTrack(parseInt(b.getAttribute("data-w"), 10), parseInt(b.getAttribute("data-k"), 10));
+  });
 
   function workNo(k){                       /* which writing sprint this block is */
     var n = 0;
@@ -1806,8 +1815,11 @@
       m += sessionMins(list[i]);
       logged++;
     }
-    $("tallyVal").firstChild.nodeValue = total.toLocaleString();
     var rate = m > 0 ? Math.round(total / (m / 60)) : 0;
+    var sig = total + "|" + rate + "|" + logged;
+    if (sig === lastTallySig) return;          /* nothing changed, leave the DOM alone */
+    lastTallySig = sig;
+    $("tallyVal").firstChild.nodeValue = total.toLocaleString();
     $("tallyRate").textContent = rate > 0 ? "· " + rate.toLocaleString() + "/hr" : "";
     $("tallySub").textContent = logged
       ? logged + " sprint" + (logged === 1 ? "" : "s") + " logged. Tap any number to change it."
