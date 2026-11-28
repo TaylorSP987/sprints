@@ -579,7 +579,7 @@
     <button class="adbtn" id="pastAddBtn">Add a sprint I did off the timer</button>
 
     <div class="tally" id="tallyBox">
-      <span class="tl">Words today</span>
+      <span class="tl" id="tallyLabel">Words today</span>
       <span class="tv" id="tallyVal">0<span id="tallyRate"></span></span>
     </div>
     <p class="tallysub" id="tallySub">Tap a sprint to put its word count in.</p>
@@ -1289,6 +1289,7 @@
     $("todayCtrl2").hidden = false;
     $("pastAddBtn").hidden = false;
     $("pastAddBtn").textContent = "Add a sprint I did off the timer";
+    $("tallyLabel").textContent = "Words today";
     $("progHead").textContent = "Written today";
     $("listHead").textContent = "Today";
 
@@ -1991,7 +1992,8 @@
       lastTallySig = sig;
       $("tallyVal").firstChild.nodeValue = words.toLocaleString();
       $("tallyRate").textContent = wmins > 0 ? "· " + Math.round(words / (wmins / 60)).toLocaleString() + "/hr" : "";
-      $("tallySub").textContent = "Words " + dayPhrase(k) + ". Tap a sprint to change it.";
+      $("tallyLabel").textContent = "Words " + dayPhrase(k);
+      $("tallySub").textContent = "Tap a sprint to change its count.";
     }
   }
 
